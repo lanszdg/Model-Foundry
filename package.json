@@ -1,11 +1,11 @@
 {
   "name": "model-foundry",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "A local-first, first-person large-model engineering world in one HTML file.",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node verify-v3.cjs",
+    "test": "node verify.mjs",
     "test:regression": "node verify-v2.cjs",
     "preview": "node preview.mjs"
   },

@@ -1,0 +1,5 @@
+import {spawnSync} from 'node:child_process';
+for(const args of [['verify-v3.cjs','--fixture'],['verify-v4.cjs','--fixture'],['verify-v4-boundaries.cjs'],['verify-v2.cjs']]){
+ const result=spawnSync(process.execPath,args,{stdio:'inherit',cwd:new URL('.',import.meta.url),windowsHide:true});
+ if(result.status!==0)process.exit(result.status||1);
+}

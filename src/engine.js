@@ -31,8 +31,8 @@ class World{
   return{dp,accum,memory:stateMemory+activation+4,gpus,tokensPerStep:c.global_batch_size*c.seq_length};
  }
  validate(c=this.config()){
-  const allowed=['model','stage','precision','seq_length','micro_batch_size','global_batch_size','learning_rate','warmup_steps','train_steps','tensor_parallel','pipeline_parallel','context_parallel','activation_recompute','checkpoint_interval','seed','optimizer_offload'];
-  for(const k of Object.keys(c))this.need(allowed.includes(k),'未知配置字段：'+k);
+  const allowed=['model','stage','precision','seq_length','micro_batch_size','global_batch_size','learning_rate','warmup_steps','train_steps','tensor_parallel','pipeline_parallel','context_parallel','activation_recompute','checkpoint_interval','seed','optimizer_offload','grad_clip','weight_decay','dpo_beta'];
+  for(const key of ['grad_clip','weight_decay','dpo_beta'])if(c[key]!==undefined){c[key]=Number(c[key]);this.need(Number.isFinite(c[key])&&c[key]>=0,key+' 必须为非负数');}for(const k of Object.keys(c))this.need(allowed.includes(k),'未知配置字段：'+k);
   this.need(c.model==='atlas-70b','当前工程模型为 atlas-70b');this.need(['pretrain','sft','dpo'].includes(c.stage),'stage 必须为 pretrain、sft 或 dpo');
   this.need(c.precision==='bf16','当前镜像支持 bf16 配方');this.need(['true','false'].includes(c.activation_recompute),'activation_recompute 必须是 true 或 false');
   for(const k of ['seq_length','micro_batch_size','global_batch_size','train_steps','tensor_parallel','pipeline_parallel','context_parallel','checkpoint_interval'])this.need(Number.isInteger(c[k])&&c[k]>0,k+' 必须是正整数');
