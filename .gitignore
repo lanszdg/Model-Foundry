@@ -1,0 +1,11 @@
+.openai/
+.publish/
+.delivery/
+.sites-checkout*/
+versions/
+node_modules/
+*.zip
+*.log
+.DS_Store
+Thumbs.db
+.test-artifacts/
