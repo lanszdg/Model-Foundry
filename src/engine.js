@@ -24,13 +24,14 @@ class World{
  config(){return parseConfig(this.state.files[CONFIG]);}
  fingerprint(){return hash([CONFIG,'/workspace/atlas/train.py','/workspace/atlas/jobs/pretrain.sbatch'].map(p=>this.state.files[p]||'').join('\n---\n'));}
  configInfo(c=this.config()){
-  const world=c.tensor_parallel*c.pipeline_parallel*c.context_parallel,dp=32/world,accum=c.global_batch_size/(c.micro_batch_size*dp);
-  const stateMemory=70/Math.max(1,c.tensor_parallel*c.pipeline_parallel)*(6+12/Math.max(1,dp*c.context_parallel));
+  const gpus=this.batchRequest?this.batchRequest().gpus:32;
+  const world=c.tensor_parallel*c.pipeline_parallel*c.context_parallel,dp=gpus/world,accum=c.global_batch_size/(c.micro_batch_size*dp);
+  const stateMemory=70/Math.max(1,c.tensor_parallel*c.pipeline_parallel)*(6+(c.optimizer_offload==='cpu'?0:12)/Math.max(1,dp*c.context_parallel));
   const activation=6*c.micro_batch_size*(c.seq_length/8192)*(c.activation_recompute==='true'?1:3.2)/Math.max(1,c.context_parallel);
-  return{dp,accum,memory:stateMemory+activation+4,gpus:32,tokensPerStep:c.global_batch_size*c.seq_length};
+  return{dp,accum,memory:stateMemory+activation+4,gpus,tokensPerStep:c.global_batch_size*c.seq_length};
  }
  validate(c=this.config()){
-  const allowed=['model','stage','precision','seq_length','micro_batch_size','global_batch_size','learning_rate','warmup_steps','train_steps','tensor_parallel','pipeline_parallel','context_parallel','activation_recompute','checkpoint_interval','seed'];
+  const allowed=['model','stage','precision','seq_length','micro_batch_size','global_batch_size','learning_rate','warmup_steps','train_steps','tensor_parallel','pipeline_parallel','context_parallel','activation_recompute','checkpoint_interval','seed','optimizer_offload'];
   for(const k of Object.keys(c))this.need(allowed.includes(k),'未知配置字段：'+k);
   this.need(c.model==='atlas-70b','当前工程模型为 atlas-70b');this.need(['pretrain','sft','dpo'].includes(c.stage),'stage 必须为 pretrain、sft 或 dpo');
   this.need(c.precision==='bf16','当前镜像支持 bf16 配方');this.need(['true','false'].includes(c.activation_recompute),'activation_recompute 必须是 true 或 false');
@@ -38,7 +39,8 @@ class World{
   this.need(Number.isInteger(c.warmup_steps)&&c.warmup_steps>=0&&c.warmup_steps<c.train_steps,'warmup_steps 必须小于 train_steps');
   this.need(c.seq_length>=128&&c.seq_length<=131072,'seq_length 范围 128—131072');this.need(c.train_steps<=1000000,'train_steps 超出工程预算');
   this.need(c.learning_rate>0&&c.learning_rate<=.1,'learning_rate 范围 (0, 0.1]');
-  const info=this.configInfo(c);this.need(Number.isInteger(info.dp)&&info.dp>=1,'TP × PP × CP 必须整除 world_size=32');
+  this.need(!c.optimizer_offload||['none','cpu'].includes(c.optimizer_offload),'optimizer_offload 必须为 none 或 cpu');
+  const info=this.configInfo(c);this.need(Number.isInteger(info.dp)&&info.dp>=1,'TP × PP × CP 必须整除 world_size='+info.gpus);
   this.need(64%c.tensor_parallel===0,'attention_heads=64 必须能被 TP 整除');this.need(80%c.pipeline_parallel===0,'layers=80 必须能被 PP 整除');
   this.need(Number.isInteger(info.accum)&&info.accum>=1,'global_batch 必须是 micro_batch × DP 的整数倍');return info;
  }
@@ -81,14 +83,14 @@ class World{
    }
    else if(type==='sftdata'){this.need(s.services.data&&s.mounts&&s.data.clean,'数据服务或已清洗语料不可用');s.data.sft=true;s.files['/data/sft/training.jsonl']='{"messages":[{"role":"user","content":"解释梯度累积"},{"role":"assistant","content":"累计多个 micro batch 的梯度后执行一次优化器更新。"}]}\n';s.files['/data/preference/manifest.json']='{"pairs":180000,"schema":["prompt","chosen","rejected"]}';result='指令集 1.2M conversations / 偏好集 180K pairs 已冻结；模板与 loss mask 通过检查';}
    else if(type==='savefile'){this.need(typeof arg.path==='string'&&typeof arg.content==='string','无效文件');this.need(arg.content.length<100000,'文件超过 100 KB');s.files[arg.path]=arg.content;if([CONFIG,'/workspace/atlas/train.py','/workspace/atlas/jobs/pretrain.sbatch'].includes(arg.path))s.checkedHash='';result='已保存 '+arg.path;}
-   else if(type==='check'){const c=this.config(),inf=this.validate(c),script=s.files['/workspace/atlas/train.py'];this.need(script&&/from megatron\.bridge/.test(script)&&/forward_step_func\s*=/.test(script)&&/(?:pretrain|entry)\(cfg/.test(script),'训练入口检查失败：需要 Megatron 入口、cfg 与 forward_step_func');const batch=s.files['/workspace/atlas/jobs/pretrain.sbatch'];this.need(batch&&/#SBATCH\s+--nodes=4/.test(batch)&&/#SBATCH\s+--gpus-per-node=8/.test(batch),'Slurm 脚本必须与 world_size=32、4×8 GPU 布局一致');s.checkedHash=this.fingerprint();result='配置通过：world=32 / TP='+c.tensor_parallel+' / PP='+c.pipeline_parallel+' / CP='+c.context_parallel+' / DP='+inf.dp+'；梯度累积='+inf.accum+'；峰值显存约 '+inf.memory.toFixed(1)+' GiB/GPU';}
+   else if(type==='check'){const c=this.config(),inf=this.validate(c),script=s.files['/workspace/atlas/train.py'];this.need(script&&/from megatron\.bridge/.test(script)&&/forward_step_func\s*=/.test(script)&&/(?:pretrain|entry)\(cfg/.test(script),'训练入口检查失败：需要 Megatron 入口、cfg 与 forward_step_func');const batch=s.files['/workspace/atlas/jobs/pretrain.sbatch'];if(this.batchRequest)this.batchRequest();else this.need(batch&&/#SBATCH\s+--nodes=4/.test(batch)&&/#SBATCH\s+--gpus-per-node=8/.test(batch),'Slurm 脚本必须与 world_size=32、4×8 GPU 布局一致');s.checkedHash=this.fingerprint();result='配置通过：world='+inf.gpus+' / TP='+c.tensor_parallel+' / PP='+c.pipeline_parallel+' / CP='+c.context_parallel+' / DP='+inf.dp+'；梯度累积='+inf.accum+'；峰值显存约 '+inf.memory.toFixed(1)+' GiB/GPU';}
    else if(type==='submit'){
     const c=this.config(),inf=this.validate(c);this.need(s.checkedHash===this.fingerprint(),'配置或代码已更改或未检查，请先执行预检');
     this.need(s.services.slurm,'sbatch: Unable to contact slurm controller');this.need(s.data.tokenized,'数据索引不存在：/data/tokenized/atlas_text_document.idx');this.need(s.mounts&&s.services.storage,'训练数据挂载不可用');
-    this.need(!s.jobs.some(j=>['PENDING','CONFIGURING','RUNNING'].includes(j.status)),'当前已有训练作业，请先完成或取消');
+    if(!this.schedule)this.need(!s.jobs.some(j=>['PENDING','CONFIGURING','RUNNING'].includes(j.status)),'当前已有训练作业，请先完成或取消');
     if(c.stage!=='pretrain'){this.need(s.data.sft,'后训练数据尚未准备');this.need(s.checkpoints.some(p=>p.complete&&p.stage===(c.stage==='sft'?'pretrain':'sft')),'缺少 '+(c.stage==='sft'?'Base':'SFT')+' 检查点');}
     const parent=c.stage==='pretrain'?null:[...s.checkpoints].reverse().find(p=>p.complete&&p.stage===(c.stage==='sft'?'pretrain':'sft'));
-    const j={id:s.nextJob++,stage:c.stage,status:'PENDING',phase:'Resources',age:0,step:0,total:c.train_steps,config:clone(c),info:inf,dataVersion:s.data.version,quality:s.data.quality,loss:0,valLoss:0,points:[],checkpoints:[],parent:parent?.id||null,gpus:32,logs:[],started:s.clock,resumeFrom:0};
+    const j={id:s.nextJob++,stage:c.stage,status:'PENDING',phase:'Resources',age:0,step:0,total:c.train_steps,config:clone(c),info:inf,dataVersion:s.data.version,quality:s.data.quality,loss:0,valLoss:0,points:[],checkpoints:[],parent:parent?.id||null,gpus:inf.gpus,logs:[],started:s.clock,resumeFrom:0};
     s.jobs.unshift(j);this.jobLog(j,'Job accepted; waiting for allocation.');s.files['/workspace/atlas/runs/'+j.id+'/config.yaml']=s.files[CONFIG];result='Submitted batch job '+j.id;
    }
    else if(type==='cancel'){const j=s.jobs.find(j=>j.id===Number(arg.id))||this.runningTrain();this.need(j&&['PENDING','CONFIGURING','RUNNING'].includes(j.status),'没有可停止的作业');if(j.status==='RUNNING'&&arg.save&&s.services.storage&&s.mounts)this.checkpoint(j);j.status='CANCELLED';j.phase='User request';this.jobLog(j,'Job cancelled; resources released.');result='作业 '+j.id+' 已停止，资源已释放';}
