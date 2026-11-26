@@ -79,4 +79,5 @@ canvas.addEventListener('pointerdown',e=>{if(!state.active||state.seated)return;
 canvas.addEventListener('pointermove',e=>{if(!state.drag)return;state.dragDistance+=Math.abs(e.clientX-state.lastX)+Math.abs(e.clientY-state.lastY);state.yaw+=(e.clientX-state.lastX)*.003;state.pitch=Math.max(-.8,Math.min(.8,state.pitch-(e.clientY-state.lastY)*.003));state.lastX=e.clientX;state.lastY=e.clientY;});
 canvas.addEventListener('pointerup',()=>{state.drag=false;if(state.dragDistance<5&&state.focused)Scene.interact(state.focused);});canvas.addEventListener('pointercancel',()=>state.drag=false);
 addEventListener('keydown',e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;state.keys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab',' '].includes(e.key))e.preventDefault();if((e.key==='e'||e.key==='E')&&state.active&&!state.seated&&!document.getElementById('devicePanel')?.classList.contains('open')){if(state.focused)Scene.interact(state.focused);else window.showToast?.('靠近并面向设备后按 E 交互');}});
-addEventListener('keyup',e=>state.keys[e.key]=false);addEventListener('
+addEventListener('keyup',e=>state.keys[e.key]=false);addEventListener('blur',()=>{state.keys={};state.drag=false;});requestAnimationFrame(frame);
+})();
