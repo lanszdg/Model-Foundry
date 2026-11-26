@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.4.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.5.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -85,6 +85,21 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **工程导出与导入**：保存多个工程分支，便于复盘和比较。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
+
+## v0.5 · 从“显示输出”，走向逐步执行
+
+![可暂停、保存与继续的逐步执行](assets/execution-state.svg)
+
+**暂停一次请求、保存整个工程，再回来继续：执行位置和随机数都应该接得上。**
+
+本版把评测和服务接到同一个逐步解码器。入队与 Prefill 不生成答案；每次 Decode 才抽取下一个 Token。请求保留上下文、采样次数、RNG、停止串和结束原因；暂停释放 KV，恢复先重建 KV，再继续原来的采样。
+
+- **状态经得起中断**：暂停、项目刷新、恢复、取消和超时都作用于同一次执行。
+- **指标经得起核对**：修复重复字符抬高 F1 的缺陷，按字符出现次数计算交集；报告保存评测协议。
+- **参数经得起检查**：新训练按配方学习率与调度更新，去掉阶段隐藏倍率；未实现的框架调用报告源码错误。
+- **历史经得起追溯**：旧报告保留并要求重新评测；已加载的模型继续服务，新发布按当前协议验收。
+
+操作契约、独立数值例子与验收路径见 [真实性基准与执行验收](docs/真实性基准与执行验收.md)。这些改进提升执行机制的一致性，不代表已完成 Transformer 与真实 GPU 性能的完整复刻。
 
 ## v0.4 · 从配置界面，走向可执行的工程闭环
 
@@ -172,7 +187,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.4.0**。本版覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.5.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -191,6 +206,7 @@ Model-Foundry/
 │   ├── python.js       # AST、项目模块与源文件错误定位
 │   ├── corpus.js       # 数据治理、版本、Tokenizer 与 Packing
 │   ├── learning.js     # 前向执行、梯度、后训练与评测
+│   ├── decoder.js      # 可持久化的单步采样与停止控制
 │   ├── serving.js      # 请求调度、KV、灰度与副本恢复
 │   ├── artifacts.js    # 转换 I/O、分片校验与资产登记
 │   ├── storage.js      # IndexedDB 原子工程存档
@@ -208,6 +224,7 @@ Model-Foundry/
 ├── verify-v3.cjs       # 系统与集群集成验证
 ├── verify-v4.cjs       # 数据/脚本/训练/服务全链验证
 ├── verify-v4-boundaries.cjs # 故障与 KV 不变量
+├── verify-v5.cjs       # 独立计分、单步采样与暂停恢复验收
 ├── verify.mjs          # 全部验收入口
 ├── docs/               # 操作规格与验收路径
 ├── CHANGELOG.md

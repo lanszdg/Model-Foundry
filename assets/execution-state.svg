@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="540" viewBox="0 0 1440 540" role="img" aria-labelledby="title desc">
+<title id="title">Model Foundry — 每一步都有执行状态</title><desc id="desc">入队、输入处理、逐步采样和结束；暂停保存随机数状态、释放KV，恢复后重建KV并继续。</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#122a32"/><stop offset="1" stop-color="#0c1c22"/></linearGradient></defs>
+<rect width="1440" height="540" rx="18" fill="url(#bg)"/>
+<g font-family="Segoe UI,Microsoft YaHei,sans-serif"><text x="64" y="58" fill="#a8ce8b" font-size="12" letter-spacing="3">MODEL FOUNDRY / EXECUTION CONTRACT 05</text><text x="64" y="111" fill="#eff4ec" font-size="32" font-weight="600">每个 Token，都有发生的时刻。</text><text x="64" y="146" fill="#9db3af" font-size="16">队列、KV、采样与工程存档，共享一次可恢复的执行。</text>
+<g fill="#18333b" stroke="#466267"><rect x="64" y="195" width="268" height="135" rx="10"/><rect x="409" y="195" width="268" height="135" rx="10"/><rect x="754" y="195" width="268" height="135" rx="10"/><rect x="1099" y="195" width="277" height="135" rx="10"/></g>
+<g fill="#a8ce8b" font-size="12" letter-spacing="1"><text x="86" y="225">01 / QUEUED</text><text x="431" y="225">02 / PREFILL</text><text x="776" y="225">03 / DECODE STEP</text><text x="1121" y="225">04 / FINISHED</text></g>
+<g fill="#eff4ec" font-size="22"><text x="86" y="264">等待资源</text><text x="431" y="264">处理输入 / 重建 KV</text><text x="776" y="264">采样下一个 Token</text><text x="1121" y="264">完成、取消或超时</text></g>
+<g fill="#9db3af" font-size="14"><text x="86" y="301">空输出 · RNG 不前进</text><text x="431" y="301">消耗预算 · 不抽样</text><text x="776" y="301">更新上下文、RNG 与输出</text><text x="1121" y="301">结束采样 · 释放 KV</text></g>
+<g stroke="#91bca0" fill="none" stroke-width="2"><path d="M345 260h49m-9-7 9 7-9 7M690 260h49m-9-7 9 7-9 7M1035 260h49m-9-7 9 7-9 7"/><path d="M888 343v47H542v-47" stroke-dasharray="5 5"/></g>
+<rect x="64" y="419" width="1312" height="72" rx="8" fill="#a8ce8b" fill-opacity=".08" stroke="#466267"/><text x="88" y="449" fill="#c5deba" font-size="16">PAUSE → SAVE → RELOAD → RESUME</text><text x="88" y="475" fill="#9db3af" font-size="14">保留解码位置和随机数状态；恢复重建 KV，后续采样与不中断运行保持一致。</text><text x="634" y="381" fill="#a8ce8b" font-size="13">暂停 / 抢占 → 重建 KV → 继续</text>
+</g></svg>
