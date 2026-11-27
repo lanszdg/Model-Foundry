@@ -1,0 +1,41 @@
+{
+  "schema": "external-environment-reference-v1",
+  "actualRun": true,
+  "scope": "Isolated official MLflow installation and runtime smoke check; this is a real runtime compatibility failure, not a dependency resolver rejection",
+  "python": "3.12.10",
+  "requestedPackage": "mlflow==3.0.1",
+  "initialInstallation": {
+    "exitCode": 0,
+    "log": "install-mlflow.log",
+    "resolvedSqlAlchemy": "2.1.9"
+  },
+  "initialSmokeCheck": {
+    "evidence": "capture-20261127T082503/reference.json",
+    "serverLog": "capture-20261127T082503/initial.server.log",
+    "serverExitCode": 1,
+    "errorKind": "ImportError",
+    "module": "sqlalchemy.pool",
+    "missingSymbol": "FallbackAsyncAdaptedQueuePool",
+    "actualVersionVerified": "3.0.1"
+  },
+  "repair": {
+    "commandScope": "workspace isolated venv only",
+    "requirement": "sqlalchemy==2.0.41",
+    "log": "repair-sqlalchemy.log",
+    "systemPythonModified": false
+  },
+  "recoveredSmokeAndApiCheck": {
+    "evidence": "capture-20261127T082926/reference.json",
+    "passed": true,
+    "caseCount": 25,
+    "sqliteRestartPreservedData": true,
+    "ownedServersCleaned": true
+  },
+  "simulationContract": {
+    "allowMetadataResolution": true,
+    "mustNotFabricateStricterOfficialRequiresDist": true,
+    "runtimeImportsMustCheckAvailableSymbols": true,
+    "repairMustChangeEnvironmentSnapshot": true,
+    "successfulInstallIsNotRuntimeCompatibilityProof": true
+  }
+}

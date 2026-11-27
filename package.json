@@ -1,6 +1,6 @@
 {
   "name": "model-foundry",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "description": "A local-first, first-person large-model engineering world in one HTML file.",
   "scripts": {
@@ -9,5 +9,7 @@
     "test:regression": "node verify-v2.cjs",
     "preview": "node preview.mjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=22"
+  }
 }

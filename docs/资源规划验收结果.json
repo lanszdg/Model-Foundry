@@ -1,0 +1,54 @@
+{
+  "checks": 99,
+  "reports": [
+    {
+      "model": "qwen3.8-27b",
+      "sourceBytes": 55562855904,
+      "logicalParameters": 27781427952,
+      "fullGpuGiB": 243.0742628276348,
+      "qloraGpuGiB": 7.357979714870453
+    },
+    {
+      "model": "groot-n1.7",
+      "sourceBytes": 6910361856,
+      "logicalParameters": 3455180928,
+      "fullGpuGiB": 43.07676911354065,
+      "qloraGpuGiB": 1.4845184683799744
+    },
+    {
+      "model": "vjepa-2.1",
+      "sourceBytes": 8327746560,
+      "logicalParameters": 2081936640,
+      "fullGpuGiB": 11.121527194976807,
+      "qloraGpuGiB": 0.8399998471140862
+    },
+    {
+      "model": "cosmos3-nano",
+      "sourceBytes": 34894641696,
+      "logicalParameters": 15750057456,
+      "fullGpuGiB": 153.94065311551094,
+      "qloraGpuGiB": 7.762547969818115
+    },
+    {
+      "model": "vla-jepa",
+      "sourceBytes": 6162997270,
+      "logicalParameters": 3081498247,
+      "fullGpuGiB": 25.527217274531722,
+      "qloraGpuGiB": 1.1058054435998201
+    },
+    {
+      "model": "deepseek-v4.1-flash-1017",
+      "sourceBytes": 510286023000,
+      "logicalParameters": 763205315794,
+      "fullGpuGiB": 7984.3154382407665,
+      "qloraGpuGiB": 225.4735987558961
+    },
+    {
+      "model": "glm-5.3",
+      "sourceBytes": 755617140416,
+      "logicalParameters": 753329921024,
+      "fullGpuGiB": 6244.821315288544,
+      "qloraGpuGiB": 174.67791759967804
+    }
+  ]
+}

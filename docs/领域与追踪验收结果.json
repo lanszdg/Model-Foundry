@@ -1,0 +1,87 @@
+{
+  "checks": 69,
+  "references": [
+    {
+      "family": "jepa",
+      "config": {
+        "schema": 2,
+        "hidden": 8,
+        "heads": 2,
+        "encoderLayers": 3,
+        "patch": 4,
+        "image": 8,
+        "frames": 2,
+        "chunk": 3,
+        "actionDimensions": 7,
+        "tokens": 4,
+        "patchWidth": 48,
+        "logicalActionCanvas": null
+      },
+      "parameters": 2496,
+      "loss": 1.9504286258936978
+    },
+    {
+      "family": "action-flow",
+      "config": {
+        "schema": 2,
+        "hidden": 8,
+        "heads": 2,
+        "encoderLayers": 3,
+        "patch": 4,
+        "image": 8,
+        "frames": 2,
+        "chunk": 3,
+        "actionDimensions": 7,
+        "tokens": 4,
+        "patchWidth": 48,
+        "logicalActionCanvas": [
+          40,
+          132
+        ]
+      },
+      "parameters": 5040,
+      "loss": 1.284501841690131
+    },
+    {
+      "family": "joint-action-world",
+      "config": {
+        "schema": 2,
+        "hidden": 8,
+        "heads": 2,
+        "encoderLayers": 3,
+        "patch": 4,
+        "image": 8,
+        "frames": 2,
+        "chunk": 3,
+        "actionDimensions": 7,
+        "tokens": 4,
+        "patchWidth": 48,
+        "logicalActionCanvas": [
+          7,
+          7
+        ]
+      },
+      "parameters": 5392,
+      "loss": 1.7719467026973743
+    },
+    {
+      "family": "video-flow",
+      "config": {
+        "schema": 2,
+        "hidden": 8,
+        "heads": 2,
+        "encoderLayers": 3,
+        "patch": 4,
+        "image": 8,
+        "frames": 2,
+        "chunk": 4,
+        "actionDimensions": 8,
+        "tokens": 4,
+        "patchWidth": 48,
+        "logicalActionCanvas": null
+      },
+      "parameters": 5448,
+      "loss": 3.745196872004001
+    }
+  ]
+}

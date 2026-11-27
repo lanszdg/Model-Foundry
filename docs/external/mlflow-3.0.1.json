@@ -1,0 +1,741 @@
+{
+  "schema": "external-software-reference-v1",
+  "software": "MLflow",
+  "requestedVersion": "3.0.1",
+  "actualRun": true,
+  "scope": "Tracking HTTP API, artifacts, CLI and SQLite restart; no model training or UI parity claimed",
+  "createdAt": "20261127T082926",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cases": [
+    {
+      "name": "health",
+      "method": "GET",
+      "path": "/health",
+      "request": null,
+      "status": 200,
+      "body": "OK",
+      "contentType": "text/html; charset=utf-8",
+      "elapsedMs": 3.462,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "experiment-create",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/experiments/create",
+      "request": {
+        "name": "foundry-reference-original"
+      },
+      "status": 200,
+      "body": {
+        "experiment_id": "1"
+      },
+      "contentType": "application/json",
+      "elapsedMs": 1667.233,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "experiment-duplicate-error",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/experiments/create",
+      "request": {
+        "name": "foundry-reference-original"
+      },
+      "status": 400,
+      "body": {
+        "error_code": "RESOURCE_ALREADY_EXISTS",
+        "message": "Experiment(name=foundry-reference-original) already exists. Error: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)\n(sqlite3.IntegrityError) UNIQUE constraint failed: experiments.name\n[SQL: INSERT INTO experiments (name, artifact_location, lifecycle_stage, creation_time, last_update_time) VALUES (?, ?, ?, ?, ?)]\n[parameters: ('foundry-reference-original', '', 'active', 1795768191502, 1795768191502)]\n(Background on this error at: https://sqlalche.me/e/20/gkpj)"
+      },
+      "contentType": "application/json",
+      "elapsedMs": 7.138,
+      "expectedStatus": [
+        400
+      ],
+      "passed": true
+    },
+    {
+      "name": "experiment-rename-repair",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/experiments/update",
+      "request": {
+        "experiment_id": "1",
+        "new_name": "foundry-reference-renamed"
+      },
+      "status": 200,
+      "body": {},
+      "contentType": "application/json",
+      "elapsedMs": 12.927,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "experiment-create-after-repair",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/experiments/create",
+      "request": {
+        "name": "foundry-reference-original"
+      },
+      "status": 200,
+      "body": {
+        "experiment_id": "2"
+      },
+      "contentType": "application/json",
+      "elapsedMs": 12.313,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "run-create",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/create",
+      "request": {
+        "experiment_id": "1",
+        "start_time": 1795768191535,
+        "tags": [
+          {
+            "key": "mlflow.runName",
+            "value": "source-contract-fixture"
+          },
+          {
+            "key": "foundry.fixture",
+            "value": "manually-logged-reference"
+          }
+        ]
+      },
+      "status": 200,
+      "body": {
+        "run": {
+          "info": {
+            "run_uuid": "5c181924fdc041bd8ca4fa760b8b8eff",
+            "experiment_id": "1",
+            "run_name": "source-contract-fixture",
+            "user_id": "",
+            "status": "RUNNING",
+            "start_time": 1795768191535,
+            "artifact_uri": "mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts",
+            "lifecycle_stage": "active",
+            "run_id": "5c181924fdc041bd8ca4fa760b8b8eff"
+          },
+          "data": {
+            "tags": [
+              {
+                "key": "mlflow.runName",
+                "value": "source-contract-fixture"
+              },
+              {
+                "key": "foundry.fixture",
+                "value": "manually-logged-reference"
+              }
+            ]
+          },
+          "inputs": {}
+        }
+      },
+      "contentType": "application/json",
+      "elapsedMs": 31.07,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "parameter-first-value",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/log-parameter",
+      "request": {
+        "run_id": "5c181924fdc041bd8ca4fa760b8b8eff",
+        "key": "learning_rate",
+        "value": "0.003"
+      },
+      "status": 200,
+      "body": {},
+      "contentType": "application/json",
+      "elapsedMs": 19.653,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "parameter-same-value-idempotent",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/log-parameter",
+      "request": {
+        "run_id": "5c181924fdc041bd8ca4fa760b8b8eff",
+        "key": "learning_rate",
+        "value": "0.003"
+      },
+      "status": 200,
+      "body": {},
+      "contentType": "application/json",
+      "elapsedMs": 7.317,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "parameter-overwrite-error",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/log-parameter",
+      "request": {
+        "run_id": "5c181924fdc041bd8ca4fa760b8b8eff",
+        "key": "learning_rate",
+        "value": "0.009"
+      },
+      "status": 400,
+      "body": {
+        "error_code": "INVALID_PARAMETER_VALUE",
+        "message": "Changing param values is not allowed. Param with key='learning_rate' was already logged with value='0.003' for run ID='5c181924fdc041bd8ca4fa760b8b8eff'. Attempted logging new value '0.009'."
+      },
+      "contentType": "application/json",
+      "elapsedMs": 36.03,
+      "expectedStatus": [
+        400
+      ],
+      "passed": true
+    },
+    {
+      "name": "metric-step-0",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/log-metric",
+      "request": {
+        "run_id": "5c181924fdc041bd8ca4fa760b8b8eff",
+        "key": "loss",
+        "value": 1.25,
+        "timestamp": 1795768191637,
+        "step": 0
+      },
+      "status": 200,
+      "body": {},
+      "contentType": "application/json",
+      "elapsedMs": 20.165,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "metric-step-1",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/log-metric",
+      "request": {
+        "run_id": "5c181924fdc041bd8ca4fa760b8b8eff",
+        "key": "loss",
+        "value": 0.75,
+        "timestamp": 1795768191661,
+        "step": 1
+      },
+      "status": 200,
+      "body": {},
+      "contentType": "application/json",
+      "elapsedMs": 22.248,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "metric-history",
+      "method": "GET",
+      "path": "/api/2.0/mlflow/metrics/get-history?run_id=5c181924fdc041bd8ca4fa760b8b8eff&metric_key=loss",
+      "request": null,
+      "status": 200,
+      "body": {
+        "metrics": [
+          {
+            "key": "loss",
+            "value": 1.25,
+            "timestamp": 1795768191637,
+            "step": 0
+          },
+          {
+            "key": "loss",
+            "value": 0.75,
+            "timestamp": 1795768191661,
+            "step": 1
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "elapsedMs": 9.086,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "search-real-filter",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/search",
+      "request": {
+        "experiment_ids": [
+          "1"
+        ],
+        "filter": "metrics.loss < 1 AND params.learning_rate = '0.003'",
+        "order_by": [
+          "metrics.loss ASC"
+        ],
+        "max_results": 10
+      },
+      "status": 200,
+      "body": {
+        "runs": [
+          {
+            "info": {
+              "run_uuid": "5c181924fdc041bd8ca4fa760b8b8eff",
+              "experiment_id": "1",
+              "run_name": "source-contract-fixture",
+              "user_id": "",
+              "status": "RUNNING",
+              "start_time": 1795768191535,
+              "artifact_uri": "mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts",
+              "lifecycle_stage": "active",
+              "run_id": "5c181924fdc041bd8ca4fa760b8b8eff"
+            },
+            "data": {
+              "metrics": [
+                {
+                  "key": "loss",
+                  "value": 0.75,
+                  "timestamp": 1795768191661,
+                  "step": 1
+                }
+              ],
+              "params": [
+                {
+                  "key": "learning_rate",
+                  "value": "0.003"
+                }
+              ],
+              "tags": [
+                {
+                  "key": "mlflow.runName",
+                  "value": "source-contract-fixture"
+                },
+                {
+                  "key": "foundry.fixture",
+                  "value": "manually-logged-reference"
+                }
+              ]
+            },
+            "inputs": {}
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "elapsedMs": 35.808,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "search-invalid-filter-error",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/search",
+      "request": {
+        "experiment_ids": [
+          "1"
+        ],
+        "filter": "metrics.loss ~~ 1"
+      },
+      "status": 400,
+      "body": {
+        "error_code": "INVALID_PARAMETER_VALUE",
+        "message": "Invalid comparator '~~' not one of '{'>', '!=', '<', '=', '<=', '>='}"
+      },
+      "contentType": "application/json",
+      "elapsedMs": 5.719,
+      "expectedStatus": [
+        400
+      ],
+      "passed": true
+    },
+    {
+      "name": "search-recovered-filter",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/search",
+      "request": {
+        "experiment_ids": [
+          "1"
+        ],
+        "filter": "metrics.loss < 1"
+      },
+      "status": 200,
+      "body": {
+        "runs": [
+          {
+            "info": {
+              "run_uuid": "5c181924fdc041bd8ca4fa760b8b8eff",
+              "experiment_id": "1",
+              "run_name": "source-contract-fixture",
+              "user_id": "",
+              "status": "RUNNING",
+              "start_time": 1795768191535,
+              "artifact_uri": "mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts",
+              "lifecycle_stage": "active",
+              "run_id": "5c181924fdc041bd8ca4fa760b8b8eff"
+            },
+            "data": {
+              "metrics": [
+                {
+                  "key": "loss",
+                  "value": 0.75,
+                  "timestamp": 1795768191661,
+                  "step": 1
+                }
+              ],
+              "params": [
+                {
+                  "key": "learning_rate",
+                  "value": "0.003"
+                }
+              ],
+              "tags": [
+                {
+                  "key": "mlflow.runName",
+                  "value": "source-contract-fixture"
+                },
+                {
+                  "key": "foundry.fixture",
+                  "value": "manually-logged-reference"
+                }
+              ]
+            },
+            "inputs": {}
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "elapsedMs": 20.705,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "missing-run-error",
+      "method": "GET",
+      "path": "/api/2.0/mlflow/runs/get?run_id=00000000000000000000000000000000",
+      "request": null,
+      "status": 404,
+      "body": {
+        "error_code": "RESOURCE_DOES_NOT_EXIST",
+        "message": "Run with id=00000000000000000000000000000000 not found"
+      },
+      "contentType": "application/json",
+      "elapsedMs": 7.386,
+      "expectedStatus": [
+        404
+      ],
+      "passed": true
+    },
+    {
+      "name": "artifact-list",
+      "method": "GET",
+      "path": "/api/2.0/mlflow/artifacts/list?run_id=5c181924fdc041bd8ca4fa760b8b8eff&path=configs",
+      "request": null,
+      "status": 200,
+      "body": {
+        "root_uri": "mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts",
+        "files": [
+          {
+            "path": "configs/recipe.json",
+            "is_dir": false,
+            "file_size": 103
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "elapsedMs": 17.175,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "artifact-download-exact-bytes",
+      "kind": "official-sdk",
+      "path": "configs/recipe.json",
+      "sha256": "5309982799f980f33ffde232b735b65f606908d197f18b638ff7e722ae6dd789",
+      "downloadSha256": "5309982799f980f33ffde232b735b65f606908d197f18b638ff7e722ae6dd789",
+      "passed": true
+    },
+    {
+      "name": "cli-version",
+      "kind": "official-cli",
+      "argv": [
+        "python",
+        "-m",
+        "mlflow",
+        "--version"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "stdout": "python -m mlflow, version 3.0.1\n",
+      "stderr": ""
+    },
+    {
+      "name": "cli-describe-existing",
+      "kind": "official-cli",
+      "argv": [
+        "python",
+        "-m",
+        "mlflow",
+        "runs",
+        "describe",
+        "--run-id",
+        "5c181924fdc041bd8ca4fa760b8b8eff"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "stdout": "{\n    \"info\": {\n        \"artifact_uri\": \"mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts\",\n        \"end_time\": null,\n        \"experiment_id\": \"1\",\n        \"lifecycle_stage\": \"active\",\n        \"run_id\": \"5c181924fdc041bd8ca4fa760b8b8eff\",\n        \"run_name\": \"source-contract-fixture\",\n        \"start_time\": 1795768191535,\n        \"status\": \"RUNNING\",\n        \"user_id\": \"\"\n    },\n    \"data\": {\n        \"metrics\": {\n            \"loss\": 0.75\n        },\n        \"params\": {\n            \"learning_rate\": \"0.003\"\n        },\n        \"tags\": {\n            \"mlflow.runName\": \"source-contract-fixture\",\n            \"foundry.fixture\": \"manually-logged-reference\"\n        }\n    },\n    \"inputs\": {\n        \"model_inputs\": [],\n        \"dataset_inputs\": []\n    },\n    \"outputs\": {\n        \"model_outputs\": []\n    }\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "cli-describe-missing",
+      "kind": "official-cli",
+      "argv": [
+        "python",
+        "-m",
+        "mlflow",
+        "runs",
+        "describe",
+        "--run-id",
+        "00000000000000000000000000000000"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\__main__.py\", line 3, in <module>\n    cli.main()\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 1560, in main\n    rv = self.invoke(ctx)\n         ^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 2054, in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 2054, in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 1414, in invoke\n    return ctx.invoke(self.callback, **ctx.params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 911, in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\runs.py\", line 87, in describe_run\n    run = store.get_run(run_id)\n          ^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\store\\tracking\\rest_store.py\", line 228, in get_run\n    response_proto = self._call_endpoint(GetRun, req_body)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\store\\tracking\\rest_store.py\", line 134, in _call_endpoint\n    return call_endpoint(\n           ^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\utils\\rest_utils.py\", line 590, in call_endpoint\n    response = verify_rest_response(response, endpoint)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\utils\\rest_utils.py\", line 304, in verify_rest_response\n    raise RestException(json.loads(response.text))\nmlflow.exceptions.RestException: RESOURCE_DOES_NOT_EXIST: Run with id=00000000000000000000000000000000 not found\n"
+    },
+    {
+      "name": "run-finish",
+      "method": "POST",
+      "path": "/api/2.0/mlflow/runs/update",
+      "request": {
+        "run_id": "5c181924fdc041bd8ca4fa760b8b8eff",
+        "status": "FINISHED",
+        "end_time": 1795768218587
+      },
+      "status": 200,
+      "body": {
+        "run_info": {
+          "run_uuid": "5c181924fdc041bd8ca4fa760b8b8eff",
+          "experiment_id": "1",
+          "run_name": "source-contract-fixture",
+          "user_id": "",
+          "status": "FINISHED",
+          "start_time": 1795768191535,
+          "end_time": 1795768218587,
+          "artifact_uri": "mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts",
+          "lifecycle_stage": "active",
+          "run_id": "5c181924fdc041bd8ca4fa760b8b8eff"
+        }
+      },
+      "contentType": "application/json",
+      "elapsedMs": 20.19,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "cli-server-unavailable",
+      "kind": "official-cli",
+      "argv": [
+        "python",
+        "-m",
+        "mlflow",
+        "runs",
+        "describe",
+        "--run-id",
+        "5c181924fdc041bd8ca4fa760b8b8eff"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "041bd8ca4fa760b8b8eff&run_id=5c181924fdc041bd8ca4fa760b8b8eff (Caused by ConnectTimeoutError(<HTTPConnection(host='127.0.0.1', port=51838) at 0x1ce3887b410>, 'Connection to 127.0.0.1 timed out. (connect timeout=2)'))\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\utils\\rest_utils.py\", line 229, in http_request\n    return _get_http_response_with_retries(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\utils\\request_utils.py\", line 237, in _get_http_response_with_retries\n    return session.request(method, url, allow_redirects=allow_redirects, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\requests\\sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\requests\\sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\requests\\adapters.py\", line 717, in send\n    raise ConnectTimeout(e, request=request)\nrequests.exceptions.ConnectTimeout: HTTPConnectionPool(host='127.0.0.1', port=51838): Max retries exceeded with url: /api/2.0/mlflow/runs/get?run_uuid=5c181924fdc041bd8ca4fa760b8b8eff&run_id=5c181924fdc041bd8ca4fa760b8b8eff (Caused by ConnectTimeoutError(<HTTPConnection(host='127.0.0.1', port=51838) at 0x1ce3887b410>, 'Connection to 127.0.0.1 timed out. (connect timeout=2)'))\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\__main__.py\", line 3, in <module>\n    cli.main()\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 1560, in main\n    rv = self.invoke(ctx)\n         ^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 2054, in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 2054, in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 1414, in invoke\n    return ctx.invoke(self.callback, **ctx.params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\click\\core.py\", line 911, in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\runs.py\", line 87, in describe_run\n    run = store.get_run(run_id)\n          ^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\store\\tracking\\rest_store.py\", line 228, in get_run\n    response_proto = self._call_endpoint(GetRun, req_body)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\store\\tracking\\rest_store.py\", line 134, in _call_endpoint\n    return call_endpoint(\n           ^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\utils\\rest_utils.py\", line 585, in call_endpoint\n    response = http_request(**call_kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\.test-artifacts\\v12-external\\.venv\\Lib\\site-packages\\mlflow\\utils\\rest_utils.py\", line 244, in http_request\n    raise MlflowException(\nmlflow.exceptions.MlflowException: API request to http://127.0.0.1:51838/api/2.0/mlflow/runs/get failed with timeout exception HTTPConnectionPool(host='127.0.0.1', port=51838): Max retries exceeded with url: /api/2.0/mlflow/runs/get?run_uuid=5c181924fdc041bd8ca4fa760b8b8eff&run_id=5c181924fdc041bd8ca4fa760b8b8eff (Caused by ConnectTimeoutError(<HTTPConnection(host='127.0.0.1', port=51838) at 0x1ce3887b410>, 'Connection to 127.0.0.1 timed out. (connect timeout=2)')). To increase the timeout, set the environment variable MLFLOW_HTTP_REQUEST_TIMEOUT (default: 120, type: int) to a larger value.\n"
+    },
+    {
+      "name": "run-get-after-restart",
+      "method": "GET",
+      "path": "/api/2.0/mlflow/runs/get?run_id=5c181924fdc041bd8ca4fa760b8b8eff",
+      "request": null,
+      "status": 200,
+      "body": {
+        "run": {
+          "info": {
+            "run_uuid": "5c181924fdc041bd8ca4fa760b8b8eff",
+            "experiment_id": "1",
+            "run_name": "source-contract-fixture",
+            "user_id": "",
+            "status": "FINISHED",
+            "start_time": 1795768191535,
+            "end_time": 1795768218587,
+            "artifact_uri": "mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts",
+            "lifecycle_stage": "active",
+            "run_id": "5c181924fdc041bd8ca4fa760b8b8eff"
+          },
+          "data": {
+            "metrics": [
+              {
+                "key": "loss",
+                "value": 0.75,
+                "timestamp": 1795768191661,
+                "step": 1
+              }
+            ],
+            "params": [
+              {
+                "key": "learning_rate",
+                "value": "0.003"
+              }
+            ],
+            "tags": [
+              {
+                "key": "mlflow.runName",
+                "value": "source-contract-fixture"
+              },
+              {
+                "key": "foundry.fixture",
+                "value": "manually-logged-reference"
+              }
+            ]
+          },
+          "inputs": {},
+          "outputs": {}
+        }
+      },
+      "contentType": "application/json",
+      "elapsedMs": 2733.05,
+      "expectedStatus": [
+        200
+      ],
+      "passed": true
+    },
+    {
+      "name": "cli-describe-after-restart",
+      "kind": "official-cli",
+      "argv": [
+        "python",
+        "-m",
+        "mlflow",
+        "runs",
+        "describe",
+        "--run-id",
+        "5c181924fdc041bd8ca4fa760b8b8eff"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "stdout": "{\n    \"info\": {\n        \"artifact_uri\": \"mlflow-artifacts:/1/5c181924fdc041bd8ca4fa760b8b8eff/artifacts\",\n        \"end_time\": 1795768218587,\n        \"experiment_id\": \"1\",\n        \"lifecycle_stage\": \"active\",\n        \"run_id\": \"5c181924fdc041bd8ca4fa760b8b8eff\",\n        \"run_name\": \"source-contract-fixture\",\n        \"start_time\": 1795768191535,\n        \"status\": \"FINISHED\",\n        \"user_id\": \"\"\n    },\n    \"data\": {\n        \"metrics\": {\n            \"loss\": 0.75\n        },\n        \"params\": {\n            \"learning_rate\": \"0.003\"\n        },\n        \"tags\": {\n            \"mlflow.runName\": \"source-contract-fixture\",\n            \"foundry.fixture\": \"manually-logged-reference\"\n        }\n    },\n    \"inputs\": {\n        \"model_inputs\": [],\n        \"dataset_inputs\": []\n    },\n    \"outputs\": {\n        \"model_outputs\": []\n    }\n}\n",
+      "stderr": ""
+    }
+  ],
+  "serverLifecycle": [
+    {
+      "label": "initial",
+      "pid": 22564,
+      "host": "127.0.0.1",
+      "port": 51838,
+      "argv": [
+        "<workspace>\\.test-artifacts\\v12-external\\.venv\\Scripts\\python.exe",
+        "-m",
+        "mlflow",
+        "server",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "51838",
+        "--backend-store-uri",
+        "sqlite:///D:/11.my/原型机/大模型/model-forge/.test-artifacts/v12-external/capture-20261127T082926/server/tracking.db",
+        "--serve-artifacts",
+        "--artifacts-destination",
+        "file:///D:/11.my/%E5%8E%9F%E5%9E%8B%E6%9C%BA/%E5%A4%A7%E6%A8%A1%E5%9E%8B/model-forge/.test-artifacts/v12-external/capture-20261127T082926/server/artifacts"
+      ],
+      "log": "<workspace>\\.test-artifacts\\v12-external\\capture-20261127T082926\\initial.server.log",
+      "cleanupCommand": [
+        "taskkill",
+        "/PID",
+        "22564",
+        "/T",
+        "/F"
+      ]
+    },
+    {
+      "label": "restart-same-sqlite",
+      "pid": 1824,
+      "host": "127.0.0.1",
+      "port": 51838,
+      "argv": [
+        "<workspace>\\.test-artifacts\\v12-external\\.venv\\Scripts\\python.exe",
+        "-m",
+        "mlflow",
+        "server",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "51838",
+        "--backend-store-uri",
+        "sqlite:///D:/11.my/原型机/大模型/model-forge/.test-artifacts/v12-external/capture-20261127T082926/server/tracking.db",
+        "--serve-artifacts",
+        "--artifacts-destination",
+        "file:///D:/11.my/%E5%8E%9F%E5%9E%8B%E6%9C%BA/%E5%A4%A7%E6%A8%A1%E5%9E%8B/model-forge/.test-artifacts/v12-external/capture-20261127T082926/server/artifacts"
+      ],
+      "log": "<workspace>\\.test-artifacts\\v12-external\\capture-20261127T082926\\restart-same-sqlite.server.log",
+      "cleanupCommand": [
+        "taskkill",
+        "/PID",
+        "1824",
+        "/T",
+        "/F"
+      ]
+    }
+  ],
+  "cleanup": [
+    {
+      "label": "controlled-stop",
+      "pid": 22564,
+      "wasRunning": true,
+      "method": "owned PID tree only",
+      "taskkillExit": 0,
+      "stdout": "�ɹ�: ����ֹ PID 19796 (���� PID 10796 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 10796 (���� PID 25636 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 7508 (���� PID 22564 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 25636 (���� PID 22564 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 22564 (���� PID 23444 �ӽ���)�Ľ��̡�\n",
+      "stderr": "",
+      "serverProcessExitCode": 1,
+      "portClosed": true
+    },
+    {
+      "label": "final-cleanup",
+      "pid": 1824,
+      "wasRunning": true,
+      "method": "owned PID tree only",
+      "taskkillExit": 0,
+      "stdout": "�ɹ�: ����ֹ PID 27628 (���� PID 20868 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 20868 (���� PID 2908 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 17032 (���� PID 1824 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 2908 (���� PID 1824 �ӽ���)�Ľ��̡�\n�ɹ�: ����ֹ PID 1824 (���� PID 23444 �ӽ���)�Ľ��̡�\n",
+      "stderr": "",
+      "serverProcessExitCode": 1,
+      "portClosed": true
+    }
+  ],
+  "actualVersion": "3.0.1",
+  "installedRequirementsSha256": "54920a78517a440d15909112c15cee74f241ca01863772e1f791a5cec5a64fb9",
+  "baseUrl": "http://127.0.0.1:51838",
+  "experimentId": "1",
+  "runId": "5c181924fdc041bd8ca4fa760b8b8eff",
+  "passed": true
+}
