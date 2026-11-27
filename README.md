@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.10.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.11.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -85,6 +85,26 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **工程导出与导入**：保存多个工程分支，便于复盘和比较。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
+
+## v0.11 · 配环境、跑任务、查证据、修故障
+
+![从配置到故障恢复的同一工程世界](assets/engineering-loop.svg)
+
+**把最昂贵的工程试错，变成可以保存、重放和反复练习的实操机会。**
+
+本版把环境、开发、数据、训练和软件操作进一步连起来：依赖冲突会阻止安装，权限和只读挂载会拒绝写入，数据分区失败需要恢复，重新训练会使旧评测失效。每一步都留下对应文件、日志和状态。
+
+| 实操路径 | 现在可以操作与检查的内容 |
+| :--- | :--- |
+| 建立研发环境 | 主机隔离的 venv、包版本约束、冲突处理、锁记录、SSH身份与文件权限 |
+| 开发与版本管理 | 项目 Python 回调实际影响梯度；Git暂存、提交、分支、合并冲突对应同一工作区 |
+| 处理数据 | 分区作业、失败重试、保留已提交结果、字节索引、摘要与数据来源撤回 |
+| 训练与调优 | LoRA/QLoRA、冻结基座、适配器梯度、分组策略更新，以及打包INT4/INT8资产 |
+| 世界与具身路线 | Patch注意力、独立EMA、未来预测、动作chunk、速度场积分、碰撞与抓取约束 |
+| 实验与监控 | 跨项目运行筛选、指标、配置与资产；PromQL标签查询、采样时效与告警状态 |
+| 部署与服务 | 评测绑定具体模型/数据/源码；HTTP状态、SSE分块、背压与断连取消共享服务状态 |
+
+原固定100项已完整审查，每项记录源码依据与正常、错误、恢复条件。可操作的支持范围、修复证据和仍未覆盖的原生兼容机制见 [完整审查与落地记录](docs/完整工程审查与落地.md)。新增270项检查，并有独立NumPy计算参考；检查数量不代表软件复刻比例。
 
 ## v0.10 · 让模型结构进入计算，让源码操作产生结果
 
@@ -290,7 +310,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.10.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.11.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -316,6 +336,12 @@ Model-Foundry/
 │   ├── terminal.js    # Shell 数据流、退出码与严格查询参数
 │   ├── model-contract.js # 任务、转换、服务资产与容量契约
 │   ├── acceptance.js  # 固定 100 项场景与完成度口径
+│   ├── engineering.js # 环境、权限、容器、Git、数据任务与告警
+│   ├── engineering-ui.js # 环境/源码/MLflow/Grafana工作流
+│   ├── adaptation.js # LoRA/QLoRA、分组策略梯度与打包权重
+│   ├── domain-kernels.js # Patch ViT、EMA与条件velocity flow
+│   ├── service-protocol.js # HTTP/SSE、背压与断连
+│   ├── model-topology.js # 官方checkpoint配置与未知字段
 │   ├── native-decoder.js # MLA/DSA/MoE、DeltaNet 与视觉前缀
 │   ├── debugger.js    # 冻结源码、语句断点、单步与 Watch
 │   ├── studio.js      # 文件、搜索、编辑与源码调试工作区

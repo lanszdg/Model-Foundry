@@ -10,16 +10,18 @@ def norm(x,w,eps=1e-5,zero=False): return x/np.sqrt(np.mean(x*x,axis=-1,keepdims
 def ln(x,w,b):
     z=x-x.mean(axis=-1,keepdims=True)
     return z/np.sqrt((z*z).mean(axis=-1,keepdims=True)+1e-6)*w+b
-def rotary(x,h,pos,theta,width,offset=0,axes=None):
+def rotary(x,h,pos,theta,width,offset=0,axes=None,split_half=False):
     out=x.copy().reshape(len(x),h,-1)
     for t in range(len(x)):
         for j in range(0,width,2):
             position=axes[t,(j//2)%3] if axes is not None else pos[t]
             angle=position/theta**(j/width)
             co,si=np.cos(angle),np.sin(angle)
-            left,right=out[t,:,offset+j].copy(),out[t,:,offset+j+1].copy()
-            out[t,:,offset+j]=left*co-right*si
-            out[t,:,offset+j+1]=left*si+right*co
+            i=offset+(j//2 if split_half else j)
+            k=i+(width//2 if split_half else 1)
+            left,right=out[t,:,i].copy(),out[t,:,k].copy()
+            out[t,:,i]=left*co-right*si
+            out[t,:,k]=left*si+right*co
     return out.reshape(x.shape)
 def attention(q,k,v,h,chosen=None,bidir=False):
     length=len(q);q=q.reshape(length,h,-1);k=k.reshape(length,h,-1);v=v.reshape(length,h,-1)
@@ -107,7 +109,7 @@ for fixture in fixtures:
             both=linear(z,p+'self_attn.q_proj.weight').reshape(len(ids),h,2*hd);q=both[:,:,:hd];gate=both[:,:,hd:].reshape(len(ids),d)
             q=norm(q,weights[p+'self_attn.q_norm.weight'],1e-6,True).reshape(len(ids),d)
             k=norm(linear(z,p+'self_attn.k_proj.weight').reshape(len(ids),h,hd),weights[p+'self_attn.k_norm.weight'],1e-6,True).reshape(len(ids),d)
-            q=rotary(q,h,pos,theta,r,axes=axes);k=rotary(k,h,pos,theta,r,axes=axes)
+            q=rotary(q,h,pos,theta,r,axes=axes,split_half=n['version']=='native-ops-v2');k=rotary(k,h,pos,theta,r,axes=axes,split_half=n['version']=='native-ops-v2')
             output=linear(attention(q,k,linear(z,p+'self_attn.v_proj.weight'),h)*sigmoid(gate),p+'self_attn.o_proj.weight')
         x+=output;z=norm(x,weights[p+'post_attention_layernorm.weight'],a['rms_norm_eps'],n['family']=='qwen3_5')
         if n['family']=='glm_moe_dsa' and layer>=n['firstDense']:

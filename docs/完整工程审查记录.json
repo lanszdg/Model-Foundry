@@ -1,0 +1,3600 @@
+{
+  "schema": 1,
+  "date": "2026-11-27",
+  "reviewedVersion": "0.10.0",
+  "baseCommit": "16ed3ab7fa097f3407046d6a8d90b62eb31ae6af",
+  "method": "完整审阅100项条件，对照实际源码；未运行全回归，未采集真实软件参考轨迹。仅写研究产物，不修改运行源码。",
+  "scopeWarning": "原清单是Dense Atlas专业流程100项，不能覆盖当前全部多领域产品；complete是声明子集内部闭环，不是外部100%真实性。",
+  "summary": {
+    "previous": {
+      "complete": 49,
+      "partial": 34,
+      "missing": 17
+    },
+    "reviewed": {
+      "complete": 48,
+      "partial": 38,
+      "missing": 14
+    },
+    "afterDAT01PhysicalLineFix": {
+      "complete": 49,
+      "partial": 37,
+      "missing": 14
+    },
+    "externalAccepted": 0
+  },
+  "statusChanges": [
+    {
+      "id": "DAT01",
+      "from": "complete",
+      "to": "partial",
+      "reason": "导入校验JSONL、text、ID、长度和记录数量；空行后物理行号有缺陷。"
+    },
+    {
+      "id": "DEV08",
+      "from": "missing",
+      "to": "partial",
+      "reason": "已实现跨文件文本搜索、跳转、多页签、语法/配置检查。"
+    },
+    {
+      "id": "MOD08",
+      "from": "missing",
+      "to": "partial",
+      "reason": "GLM sigmoid top-k、校正偏置、共享专家和负载进入真实计算。"
+    },
+    {
+      "id": "MOD09",
+      "from": "missing",
+      "to": "partial",
+      "reason": "native描述已表达GLM/Qwen数值张量；其他领域仍参考MLP。"
+    }
+  ],
+  "criticalFindings": [
+    {
+      "id": "AUD-001",
+      "severity": "P1",
+      "area": "ModelLab发布血缘",
+      "path": "src/model-lab.js",
+      "anchor": "const verified=p.artifacts.filter",
+      "problem": "export只检查最近evaluate报告passed/protocol，未绑定候选权重/数据/源码。重训后p.completed下游阶段也未失效。",
+      "requiredChange": "报告冻结候选权重、数据与源码摘要；新训练使下游完成标记失效；导出/部署严格比较同一候选。",
+      "acceptance": "训练A→评测A→训练B→直接导出必须拒绝；评测B后才允许。"
+    },
+    {
+      "id": "AUD-002",
+      "severity": "P1",
+      "area": "ModelLab服务健康",
+      "path": "src/model-lab.js",
+      "anchor": "type==='model-lab-predict'",
+      "problem": "部署READY后predict不检查当前GPU主机、网络、storage或Kubernetes是否失效，可能故障后仍成功。",
+      "requiredChange": "统一部署健康检查和状态转移，保留正确资源所有权，故障请求明确失败。",
+      "acceptance": "部署后断节点电源/网络或停服务→预测失败；修复后按生命周期恢复。"
+    },
+    {
+      "id": "AUD-003",
+      "severity": "P1",
+      "area": "阶段执行配置",
+      "path": "src/model-lab.js",
+      "anchor": "transformer:copy(body.transformer)",
+      "problem": "后续阶段复制父transformer.execution，不应用当前阶段dtype/tp配置，UI配方与实际数值可能不符。",
+      "requiredChange": "每次提交冻结并校验阶段execution设置；权重转换/master状态策略明确定义。",
+      "acceptance": "父fp32/TP1→子bf16/TP2时实际事件dtype、rank缓冲与recipe一致。"
+    },
+    {
+      "id": "AUD-004",
+      "severity": "P1",
+      "area": "ModelLab DPO",
+      "path": "src/model-lab.js",
+      "anchor": "function causalSample",
+      "problem": "DPO用全序列平均NLL（含prompt、截断）替代assistant序列logprob；长度不同会改变目标。",
+      "requiredChange": "按assistant mask累计chosen/rejected序列logprob，使用冻结reference和稳定logistic，并核对梯度。",
+      "acceptance": "不等长chosen/rejected与独立DPO目标和有限差分一致，prompt不直接受监督。"
+    },
+    {
+      "id": "AUD-005",
+      "severity": "P2",
+      "area": "JSONL诊断",
+      "path": "src/corpus.js",
+      "anchor": "function parseLines",
+      "problem": "先filter空行再用i+1，导致物理行号错误；ModelLab readData同类问题。",
+      "requiredChange": "保留原始行索引再忽略空行。",
+      "acceptance": "有效第1行、空第2行、坏第3行必须报告第3行。"
+    },
+    {
+      "id": "AUD-006",
+      "severity": "P1",
+      "area": "跨模型资源规格",
+      "path": "src/model-lab.js",
+      "anchor": "function budget",
+      "problem": "模型卡总参数×固定BF16/状态常数估算资源，未由官方完整张量拓扑/精度生成，且与Atlas model-spec两套契约并存。",
+      "requiredChange": "完整逻辑架构描述统一派生张量、所有权、显存、checkpoint和服务预算；预算内数值核只做正确性参考。",
+      "acceptance": "修改家族层数/专家数/精度后所有阶段资源与资产一致，完整清单之和等于总容量。"
+    },
+    {
+      "id": "AUD-007",
+      "severity": "P1",
+      "area": "环境依赖",
+      "path": "src/model-lab.js",
+      "anchor": "type==='model-lab-environment'",
+      "problem": "环境准备仅stack/repo摘要，不解析版本、包依赖或脚本导入；prepared不能说明依赖环境已构建。",
+      "requiredChange": "虚拟包数据库、隔离环境、依赖求解和脚本导入一致。",
+      "acceptance": "冲突依赖阻止安装/训练；修正锁文件后可重复构建。"
+    },
+    {
+      "id": "AUD-008",
+      "severity": "P1",
+      "area": "世界/具身/决策骨干",
+      "path": "src/model-lab.js",
+      "anchor": "function makeNetwork",
+      "problem": "领域目标已区分，但输入压成8维features后仍是两层MLP，未表达官方ViT/DiT/VAE/VLM骨干。",
+      "requiredChange": "用各领域结构描述连接视觉、时空预测和动作生成；完整逻辑形状和预算内可微路径共同验证。",
+      "acceptance": "改变图像/时序/动作条件改变对应张量和loss；训练到服务继承相同结构与参数。"
+    },
+    {
+      "id": "AUD-009",
+      "severity": "P2",
+      "area": "flow目标语义",
+      "path": "src/model-lab.js",
+      "anchor": "function inputTarget",
+      "problem": "计算velocity=noise-target后未使用；实际x0回归，推理也按x0更新。命名需明确，不能宣称已实现官方velocity目标。",
+      "requiredChange": "显式parameterization并使训练target、loss、采样更新一致；或实现真正velocity-flow并独立核验。",
+      "acceptance": "对已知线性轨迹的x0/velocity参数化分别验算并测试采样还原。"
+    },
+    {
+      "id": "AUD-010",
+      "severity": "P1",
+      "area": "原生软件对照",
+      "path": "src/acceptance.js",
+      "anchor": "externalComparison:false",
+      "problem": "已有自制Code/MLflow/Grafana风格界面，但固定版本原生操作/错误/恢复对照为0。",
+      "requiredChange": "记录软件版本、参考页面/截图、输入、退出码、日志和状态轨迹，按工作流逐项对照。",
+      "acceptance": "每个宣称复刻场景提供可重放参考和差异报告，不用内部assert数代替。"
+    },
+    {
+      "id": "AUD-011",
+      "severity": "P2",
+      "area": "台账状态滞后",
+      "path": "src/acceptance.js",
+      "anchor": "const completedInV8",
+      "problem": "状态仅v0.8 closed集合覆盖baseline，未反映v0.10搜索、MoE和多架构部分实现。",
+      "requiredChange": "数据化逐条证据与状态变更依据；DEV08/MOD08/MOD09应partial；DAT01行号缺陷修复前不能closed。",
+      "acceptance": "100行唯一、证据锚点存在；汇总来自条目且标注Dense Atlas范围。"
+    },
+    {
+      "id": "AUD-012",
+      "severity": "P2",
+      "area": "SFT截断监督",
+      "path": "src/model-lab.js",
+      "anchor": "prompt=media?3",
+      "problem": "合并文本统一截断46字节后再估prompt长度；超长prompt可能吞掉completion并仍监督一个prompt token。",
+      "requiredChange": "分别构建prompt/answer Token与mask；截断必须保留有效assistant监督，空监督拒绝。",
+      "acceptance": "超长prompt+短completion、中文UTF8和空completion分别测试mask与监督计数。"
+    }
+  ],
+  "domainCoverage": [
+    {
+      "domain": "language",
+      "actual": "Atlas decoder + GLM MLA/DSA/MoE预算内路径；DeepSeek仍通用decoder",
+      "missing": [
+        "GLM完整目标规格/索引器训练/跨层索引共享/MTP",
+        "DeepSeek Engram与原生编码/专家拓扑"
+      ]
+    },
+    {
+      "domain": "multimodal",
+      "actual": "Qwen预算内ViT视觉前缀+三Delta一attention",
+      "missing": [
+        "动态分辨率/完整processor与视觉/语言骨干",
+        "DeepStack及完整多模态协议"
+      ]
+    },
+    {
+      "domain": "world",
+      "actual": "EMA latent预测或视频features流式目标，两层MLP",
+      "missing": [
+        "原生ViT/时空predictor/VAE/DiT骨干",
+        "完整视频条件、采样与世界动态评测"
+      ]
+    },
+    {
+      "domain": "embodied/decision",
+      "actual": "7维动作/未来特征目标及二维marker反馈",
+      "missing": [
+        "原生VLM/action DiT/world predictor",
+        "传感器、运动学、接触/碰撞、控制周期与多步动作闭环"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "INF01",
+      "category": "基础设施",
+      "title": "逐节点上电",
+      "criterion": "接线和上电条件决定节点启动，失败原因可查",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "机柜门、电源线、上电状态和节点日志联动。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-power'",
+          "line": 34
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "连接电源后逐节点开机并保存。",
+        "error": "未接PDU时开机被拒绝且节点保持断电。",
+        "recovery": "接回电源后重新开机，服务需按生命周期恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF02",
+      "category": "基础设施",
+      "title": "系统部署",
+      "criterion": "逐节点安装有前置条件、运行状态和持久化结果",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "逐节点安装状态、阶段和进度最终建立OS。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-provision'",
+          "line": 35
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "上电后逐节点部署OS。",
+        "error": "无电源或重复安装时拒绝。",
+        "recovery": "中断后重新部署并核对OS/运行时状态。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF03",
+      "category": "基础设施",
+      "title": "管理网络配置",
+      "criterion": "IP/DNS 配置错误可定位，修复应用后恢复可达",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "保存netplan与apply分离，校验IP冲突和DNS。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-net-apply'",
+          "line": 37
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "修改可用IP/DNS后apply并检查可达性。",
+        "error": "重复IP被拒绝；错误DNS导致解析或注册失败。",
+        "recovery": "修正DNS并apply后节点重新可达/注册。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF04",
+      "category": "基础设施",
+      "title": "端口级布线",
+      "criterion": "端口、线缆两端、链路类型和容量共享同一拓扑",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "power/mgmt/ib线缆仅为节点布尔链路。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='cable'",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [
+        "交换机具体端口和线缆两端对象",
+        "端口速率/容量/错误计数与链路协商"
+      ],
+      "acceptanceCases": {
+        "normal": "连接指定交换机端口与节点端口形成唯一链路。",
+        "error": "端口错接/重复占用有拓扑原因。",
+        "recovery": "重新接线后链路计数和作业表现对应恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF05",
+      "category": "基础设施",
+      "title": "RDMA 网络配置",
+      "criterion": "VLAN/MTU/路由/RDMA 参数错误有对应诊断和后果",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "网络校验以管理IP/DNS和IB连接为主。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "W.prototype.refreshNetwork",
+          "line": 28
+        }
+      ],
+      "missingMechanisms": [
+        "VLAN/MTU/GID/RDMA配置",
+        "网络参数与通信超时/带宽统一因果"
+      ],
+      "acceptanceCases": {
+        "normal": "设置相同RDMA网络参数后进行通信自检。",
+        "error": "两端MTU不一致导致指定rank通信失败。",
+        "recovery": "改正配置后自检恢复并可续训。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF06",
+      "category": "基础设施",
+      "title": "GPU 运行时就绪",
+      "criterion": "GPU 可见性与运行时状态限制任务启动",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "GPU运行时标记与slurmd启动/GRES检测绑定。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-runtime'",
+          "line": 38
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "安装GPU运行时后GPU可见并可注册。",
+        "error": "未安装时slurmd/训练启动失败。",
+        "recovery": "安装后重启守护进程再成功提交。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF07",
+      "category": "基础设施",
+      "title": "共享存储挂载",
+      "criterion": "服务、网络和挂载状态共同决定数据与产物访问",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "共享存储服务、配置、挂载和数据/检查点访问联动。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.configureUnit",
+          "line": 43
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "正确export/listen和mount后读数据与写检查点。",
+        "error": "断开存储时读/写失败且不提交半检查点。",
+        "recovery": "重启存储并重新挂载后恢复工作。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF08",
+      "category": "基础设施",
+      "title": "供电与散热约束",
+      "criterion": "冗余供电、机柜功率和温度影响设备可用性",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "电源线和节点健康状态存在。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-power'",
+          "line": 34
+        }
+      ],
+      "missingMechanisms": [
+        "冗余PSU/PDU功率约束",
+        "温度、散热与降频/关机模型"
+      ],
+      "acceptanceCases": {
+        "normal": "机柜功率与温度随实际负载变化。",
+        "error": "失去一条冗余电源或过热产生对应告警/降频。",
+        "recovery": "恢复供电/散热后传感器与可用性恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF09",
+      "category": "基础设施",
+      "title": "BMC 硬件告警",
+      "criterion": "传感器、事件日志、设备定位和恢复互相对应",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有节点状态、BMC文本日志和错误定位。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "W.prototype.diagnose",
+          "line": 29
+        }
+      ],
+      "missingMechanisms": [
+        "统一传感器数值与阈值",
+        "SEL事件、确认、维修和恢复联动"
+      ],
+      "acceptanceCases": {
+        "normal": "BMC显示传感器与设备定位。",
+        "error": "故障产生对应传感器变化和SEL。",
+        "recovery": "处理故障后告警解除且保留历史。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "INF10",
+      "category": "基础设施",
+      "title": "磁盘与固件维护",
+      "criterion": "磁盘故障、更换、阵列重建和固件状态有完整生命周期",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "只有通用节点诊断，没有磁盘或固件生命周期。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "W.prototype.diagnose",
+          "line": 29
+        }
+      ],
+      "missingMechanisms": [
+        "磁盘槽位/阵列状态",
+        "热更换、重建与降级吞吐",
+        "固件版本和升级回退"
+      ],
+      "acceptanceCases": {
+        "normal": "建立磁盘阵列并查看健康状态。",
+        "error": "坏盘导致降级和相关I/O错误。",
+        "recovery": "更换磁盘、重建后容量与性能恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v2.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS01",
+      "category": "系统与终端",
+      "title": "服务进程生命周期",
+      "criterion": "start/stop/restart 对应 PID、端口、日志与状态变化",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "服务具有PID、端口规格、日志、generation和active/failed/inactive状态。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.manageUnit",
+          "line": 51
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "启动/停止/重启服务时PID和日志改变。",
+        "error": "配置错误导致服务failed并记录原因。",
+        "recovery": "修复后重启，恢复依赖服务。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS02",
+      "category": "系统与终端",
+      "title": "配置生效边界",
+      "criterion": "保存、reload、restart 与生效代数有一致后果",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "文件保存、活动配置、reload/restart和generation独立记录。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.unitDirty",
+          "line": 40
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "保存配置后显示dirty，reload后生效。",
+        "error": "非法reload保留旧活动配置和PID。",
+        "recovery": "修正后reload或restart切换到新配置。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS03",
+      "category": "系统与终端",
+      "title": "文件权限与用户",
+      "criterion": "路径、所有者、权限和登录身份决定读写行为",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "虚拟文件读写目前不检查owner/mode；sudo主要去除前缀。",
+      "evidence": [
+        {
+          "path": "src/terminal.js",
+          "anchor": "function write",
+          "line": 22
+        }
+      ],
+      "missingMechanisms": [
+        "用户/组/权限和所有者元数据",
+        "终端/编辑器/进程统一鉴权"
+      ],
+      "acceptanceCases": {
+        "normal": "以不同用户读写同一文件遵循mode。",
+        "error": "无权限时编辑器与Shell均拒绝。",
+        "recovery": "管理员修改权限后原操作成功。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS04",
+      "category": "系统与终端",
+      "title": "Shell 数据流",
+      "criterion": "引号、变量、退出码、条件、管道与重定向保留语义",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Shell实现引号、变量、管道、条件、重定向和退出码的声明子集。",
+      "evidence": [
+        {
+          "path": "src/terminal.js",
+          "anchor": "W.prototype.command",
+          "line": 37
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "运行带引号变量和管道/重定向的组合命令。",
+        "error": "非法语法/不支持展开返回非零且不损坏文件。",
+        "recovery": "纠正命令后输出、退出码和文件一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS05",
+      "category": "系统与终端",
+      "title": "软件包依赖",
+      "criterion": "安装、版本约束、依赖冲突与卸载影响服务",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "安装GPU软件栈为固定列表，项目环境是stack/repo摘要。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-runtime'",
+          "line": 38
+        }
+      ],
+      "missingMechanisms": [
+        "版本化包数据库与依赖解析",
+        "冲突、卸载、隔离环境与导入联动"
+      ],
+      "acceptanceCases": {
+        "normal": "安装声明版本并检查依赖和可导入模块。",
+        "error": "不兼容CUDA/Python/包版本导致可定位错误。",
+        "recovery": "修正版本后依赖检查和服务运行恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS06",
+      "category": "系统与终端",
+      "title": "端口与安全连接",
+      "criterion": "监听、冲突、路由、防火墙和 TLS 故障能定位",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "服务规格有固定监听端口，主机可用性影响服务。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "const specs=",
+          "line": 8
+        }
+      ],
+      "missingMechanisms": [
+        "端口占用冲突",
+        "路由、防火墙与TLS证书状态"
+      ],
+      "acceptanceCases": {
+        "normal": "服务绑定端口可查询并被合法路由访问。",
+        "error": "端口冲突或阻断产生准确连接错误。",
+        "recovery": "释放端口/修正路由后重新访问成功。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS07",
+      "category": "系统与终端",
+      "title": "Slurm 查询参数契约",
+      "criterion": "筛选、格式、非法参数与退出码符合支持清单",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "squeue/sacct按支持参数清单严格解析、筛选、格式化并返回退出码。",
+      "evidence": [
+        {
+          "path": "src/terminal.js",
+          "anchor": "function queue",
+          "line": 25
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "按job/state/partition/node/user筛选并格式化。",
+        "error": "非法选项或格式字段返回非零。",
+        "recovery": "改正查询后UI和终端对应同一任务。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS08",
+      "category": "系统与终端",
+      "title": "Python 语言运行时",
+      "criterion": "常用语言结构和导入执行，不支持内容明确报错",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "解释器有函数、if/for、调用、表达式、赋值和错误轨迹。",
+      "evidence": [
+        {
+          "path": "src/python.js",
+          "anchor": "function compile",
+          "line": 15
+        }
+      ],
+      "missingMechanisms": [
+        "while、异常控制流、类等专业脚本常用途径",
+        "更完整导入/标准库及Python边界语义"
+      ],
+      "acceptanceCases": {
+        "normal": "支持声明脚本并输出与独立Python相同结果。",
+        "error": "不支持语法明确报错并给文件行号。",
+        "recovery": "修复脚本后重跑且无上次残留变量。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS09",
+      "category": "系统与终端",
+      "title": "远程会话身份",
+      "criterion": "SSH 会话、环境、目录和权限随目标主机变化",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "SSH更改host，部分/etc路径映射到节点。",
+      "evidence": [
+        {
+          "path": "src/engine.js",
+          "anchor": "cmd==='ssh'",
+          "line": 207
+        }
+      ],
+      "missingMechanisms": [
+        "会话身份/用户权限",
+        "各主机独立cwd、环境、进程与连接生命周期"
+      ],
+      "acceptanceCases": {
+        "normal": "SSH到节点后命令作用于该节点。",
+        "error": "身份错误或主机不可达导致连接失败。",
+        "recovery": "重新连接后恢复该主机会话目录/环境。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SYS10",
+      "category": "系统与终端",
+      "title": "容器镜像与隔离",
+      "criterion": "镜像层、拉取、挂载、命名空间与生命周期完整联动",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "containerd只在已安装软件列表中，尚无容器对象。",
+      "evidence": [
+        {
+          "path": "src/systems.js",
+          "anchor": "type==='node-runtime'",
+          "line": 38
+        }
+      ],
+      "missingMechanisms": [
+        "镜像层/版本/拉取缓存",
+        "容器文件系统、挂载、namespace、GPU可见性和生命周期"
+      ],
+      "acceptanceCases": {
+        "normal": "从镜像启动容器并挂载数据/选择GPU。",
+        "error": "缺失挂载、镜像拉取失败或GPU隔离错误阻止训练。",
+        "recovery": "修复容器配置后重建并恢复持久化数据。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v3.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "DAT01",
+      "category": "数据工程",
+      "title": "语料导入",
+      "criterion": "格式错误定位到来源与行，正常样本进入数据版本",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "导入校验JSONL、text、ID、长度和记录数量；空行后物理行号有缺陷。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function parseLines",
+          "line": 10
+        }
+      ],
+      "missingMechanisms": [
+        "修复先filter空行导致的错误物理行号"
+      ],
+      "acceptanceCases": {
+        "normal": "导入含空行的有效JSONL并建立来源版本。",
+        "error": "在第4物理行放坏JSON，错误必须报告第4行。",
+        "recovery": "修正第4行后导入成功且保留来源身份。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": "src/corpus.js / src/model-lab.js",
+        "test": "verify-v11.cjs",
+        "result": "physical JSONL line indices preserved before ignoring blank rows"
+      }
+    },
+    {
+      "id": "DAT02",
+      "category": "数据工程",
+      "title": "规范化与审计",
+      "criterion": "变换前后内容、规则和数量可核对",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "NFKC、HTML/空白规范化及逐记录before/after/reason审计存在。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function clean",
+          "line": 11
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "运行规范化并核对变换前后和数量。",
+        "error": "规则导致空数据时不发布空有效版本。",
+        "recovery": "调整规则后生成新版本并保留旧报告。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT03",
+      "category": "数据工程",
+      "title": "精确与近似去重",
+      "criterion": "文档簇、保留决策与样本内容一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "精确hash、shingles候选、相似阈值、duplicateOf/group与保留决策联动。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function clean",
+          "line": 11
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "重复与近似文档产生簇和保留记录。",
+        "error": "无效相似度阈值被拒绝。",
+        "recovery": "修改阈值重跑后新版本决策可追溯。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT04",
+      "category": "数据工程",
+      "title": "质量与污染治理",
+      "criterion": "质量、PII 和评测污染规则产生可追溯处理记录",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "已声明的长度/广告/重复、邮箱电话替换和holdout污染规则有处理记录。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function clean",
+          "line": 11
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "输入样本命中各规则并核对逐条审计。",
+        "error": "污染输入被隔离，过严过滤导致任务失败。",
+        "recovery": "修正规则后重跑并比较两个不可变版本。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT05",
+      "category": "数据工程",
+      "title": "训练验证隔离",
+      "criterion": "按文档簇划分，验证内容不进入训练采样",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "按group确定train/validation，Tokenizer仅用训练集。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "const ordered=",
+          "line": 24
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "检查同簇只在一个split且采样只读train。",
+        "error": "重复ID或缺少验证集在相应入口报错。",
+        "recovery": "修正划分重建后新任务使用新冻结数据。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT06",
+      "category": "数据工程",
+      "title": "BPE 与 Packing",
+      "criterion": "Tokenizer、Token、监督 mask 与版本清单一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "BPE词表、byte fallback、Packing、BOS/EOS、loss mask及manifest关联。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function tokenizer",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "编码、解码、Packing和监督mask逐样本核对。",
+        "error": "非法packing长度被拒绝。",
+        "recovery": "重新构建后Tokenizer摘要与训练快照一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT07",
+      "category": "数据工程",
+      "title": "工业分片索引",
+      "criterion": "二进制布局、偏移、长度、校验与读取边界一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "train.bin/validation.bin当前为JSON pack，idx为JSON统计清单。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function tokenize",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [
+        "真实二进制token数组和文档偏移/长度索引",
+        "读取越界、损坏和校验语义"
+      ],
+      "acceptanceCases": {
+        "normal": "按索引随机读取指定文档/Token片段。",
+        "error": "偏移越界或分片损坏明确失败。",
+        "recovery": "恢复分片后重试返回一致内容。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT08",
+      "category": "数据工程",
+      "title": "分布式处理作业",
+      "criterion": "DAG、分区、重试、幂等输出和断点恢复完整",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "流水线阶段主要按时间进度推进，结束时单次处理全部记录。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "W.prototype.advanceData",
+          "line": 43
+        }
+      ],
+      "missingMechanisms": [
+        "DAG任务/分区和Worker分配",
+        "重试、幂等输出、断点与部分分区恢复"
+      ],
+      "acceptanceCases": {
+        "normal": "各分区依赖完成后只提交一次输出。",
+        "error": "中途Worker失败只重试受影响分区。",
+        "recovery": "恢复后无重复记录或重复版本提交。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT09",
+      "category": "数据工程",
+      "title": "大规模虚拟数据",
+      "criterion": "虚拟 TB 级分片的容量、吞吐与采样生命周期一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "记录实际为浏览器小数据，虚拟大规模生命周期不完整。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function tokenize",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [
+        "TB级分片描述、容量/IO/采样一致模型",
+        "数据作业与训练/检查点共享存储争用"
+      ],
+      "acceptanceCases": {
+        "normal": "大分片数量改变存储用量与DataLoader等待。",
+        "error": "满盘/带宽瓶颈可定位到具体数据分片。",
+        "recovery": "扩容/修复后从已提交边界续读。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DAT10",
+      "category": "数据工程",
+      "title": "数据访问治理",
+      "criterion": "来源授权、访问策略、撤回与审计影响后续使用",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "来源/license是记录元数据，未限制访问或撤回。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "license:original.license",
+          "line": 19
+        }
+      ],
+      "missingMechanisms": [
+        "来源授权/使用策略",
+        "撤回对数据版本、训练与发布的影响",
+        "权限与审计"
+      ],
+      "acceptanceCases": {
+        "normal": "授权数据才可进入指定用途管线。",
+        "error": "撤回来源后新训练/发布受阻且历史可追踪。",
+        "recovery": "使用合规替代版本后恢复工程链路。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "DEV01",
+      "category": "脚本与开发",
+      "title": "项目文件与源码冻结",
+      "criterion": "编辑、保存与运行快照关联，后续修改不改写历史运行",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Python项目文件、recipe、数据、Tokenizer与运行快照关联。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function snapshot",
+          "line": 51
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "提交后编辑源文件，旧运行sourceHash不变。",
+        "error": "不一致父结构/Tokenizer禁止后训练。",
+        "recovery": "纠正输入后新运行建立新摘要。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV02",
+      "category": "脚本与开发",
+      "title": "源码错误定位",
+      "criterion": "编译、导入和执行错误保留文件、行号与调用轨迹",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "编译、模块导入、调用和执行异常带文件/行号/帧。",
+      "evidence": [
+        {
+          "path": "src/python.js",
+          "anchor": "class PyError",
+          "line": 4
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "正常多文件调用保留执行trace。",
+        "error": "引入语法/导入/除零错误并核对定位。",
+        "recovery": "修复文件后重跑通过且旧失败报告仍存在。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV03",
+      "category": "脚本与开发",
+      "title": "可执行损失回调",
+      "criterion": "修改损失和 mask 会影响实际梯度与参数更新",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "训练入口和loss callback通过AST执行并连接实际VJP。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function compileProgram",
+          "line": 40
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "修改loss或mask后实际梯度和参数更新改变。",
+        "error": "零监督分母或返回结构错误阻止更新。",
+        "recovery": "恢复合法callback后从已提交状态训练。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV04",
+      "category": "脚本与开发",
+      "title": "张量形状与归约",
+      "criterion": "reshape/index/flatten/reduce 正确传递形状和梯度，非法输入报错",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "形状推导、索引、分维归约和VJP在声明Tensor子集实现。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "class Tensor",
+          "line": 10
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "对非对称输入组合reshape/index/reduce并对照梯度。",
+        "error": "非法维度/重复归约轴/广播明确报错。",
+        "recovery": "修正形状后梯度与独立参考一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV05",
+      "category": "脚本与开发",
+      "title": "Python 控制流",
+      "criterion": "函数、条件、循环、异常与类覆盖专业脚本常用途径",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "函数/if/for可执行，循环和执行预算有限。",
+      "evidence": [
+        {
+          "path": "src/python.js",
+          "anchor": "function execute",
+          "line": 37
+        }
+      ],
+      "missingMechanisms": [
+        "while/break/continue/异常/类等未完整覆盖",
+        "常用脚本语义对照"
+      ],
+      "acceptanceCases": {
+        "normal": "专业训练脚本常用控制流可按源码运行。",
+        "error": "无限循环或非法语义有明确错误与位置。",
+        "recovery": "修复后可继续正常执行且无副作用重放。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV06",
+      "category": "脚本与开发",
+      "title": "框架算子兼容",
+      "criterion": "支持的框架 API 有数值语义，不支持的调用明确失败",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "torch facade支持sum/mean/ones_like/zeros_like及受控训练入口。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "if(name==='torch')",
+          "line": 45
+        }
+      ],
+      "missingMechanisms": [
+        "更完整torch.nn/autograd/optim/data算子API",
+        "与独立框架的输入、输出和错误对照"
+      ],
+      "acceptanceCases": {
+        "normal": "受支持API用相同输入对照框架结果与梯度。",
+        "error": "不支持API明确失败，不返回成功占位结果。",
+        "recovery": "改用支持接口后脚本实际训练成功。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV07",
+      "category": "脚本与开发",
+      "title": "调试器与断点",
+      "criterion": "可检查变量、逐步执行并在源码断点暂停恢复",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有行断点、继续、F10/F11、局部变量、Watch和冻结源码重放。",
+      "evidence": [
+        {
+          "path": "src/debugger.js",
+          "anchor": "function replay",
+          "line": 5
+        }
+      ],
+      "missingMechanisms": [
+        "当前仅受控纯Python调试",
+        "训练框架运行上下文、完整栈帧、异常/条件断点"
+      ],
+      "acceptanceCases": {
+        "normal": "在实际训练callback中暂停并查看Tensor/梯度。",
+        "error": "异常断点停在真实失败语句而非示例。",
+        "recovery": "修正后重启/继续遵循快照与副作用边界。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DEV08",
+      "category": "脚本与开发",
+      "title": "IDE 搜索与重构",
+      "criterion": "跨文件搜索、跳转、重命名和诊断符合选定 IDE 工作流",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "已实现跨文件文本搜索、跳转、多页签、语法/配置检查。",
+      "evidence": [
+        {
+          "path": "src/studio.js",
+          "anchor": "function search",
+          "line": 4
+        }
+      ],
+      "missingMechanisms": [
+        "语义符号重命名与引用重构",
+        "选定IDE版本菜单、快捷键与诊断对照"
+      ],
+      "acceptanceCases": {
+        "normal": "跨文件搜索并定位到正确行/字符。",
+        "error": "符号改名冲突在修改前诊断。",
+        "recovery": "安全重命名后相关引用同步且Git diff可见。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "DEV09",
+      "category": "脚本与开发",
+      "title": "Python 依赖环境",
+      "criterion": "可构建隔离环境并处理包安装和版本冲突",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "环境准备目前只写stack/repo摘要和environment.lock。",
+      "evidence": [
+        {
+          "path": "src/model-lab.js",
+          "anchor": "type==='model-lab-environment'",
+          "line": 30
+        }
+      ],
+      "missingMechanisms": [
+        "隔离Python环境和包版本解析",
+        "安装/卸载/导入以及依赖冲突"
+      ],
+      "acceptanceCases": {
+        "normal": "创建环境、安装锁定依赖并在该环境运行脚本。",
+        "error": "冲突版本导致安装或导入失败。",
+        "recovery": "修正锁文件后重建环境并可复现运行。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "DEV10",
+      "category": "脚本与开发",
+      "title": "Git 开发流程",
+      "criterion": "分支、diff、提交、合并和冲突与项目文件一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "编辑器存在但无虚拟Git对象与命令实现。",
+      "evidence": [
+        {
+          "path": "src/studio.js",
+          "anchor": "U.views.code",
+          "line": 6
+        }
+      ],
+      "missingMechanisms": [
+        "工作区/index/commit/branch模型",
+        "diff、三方合并、冲突解决和恢复"
+      ],
+      "acceptanceCases": {
+        "normal": "修改文件后diff、stage、commit并切换分支。",
+        "error": "两分支冲突合并产生真实冲突文件。",
+        "recovery": "解决冲突提交后文件与提交树一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v4.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "MOD01",
+      "category": "模型描述与数值",
+      "title": "Decoder 前向反向",
+      "criterion": "Embedding/Norm/RoPE/GQA/SwiGLU/Head 有可核对梯度",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Decoder各算子实际前向与反向，有限差分和独立NumPy路径可核验。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "function run",
+          "line": 40
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "相同权重和输入对照logits/loss/各类参数梯度。",
+        "error": "非法头/形状/Token范围被拒绝。",
+        "recovery": "修正配置后数值可复现。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD02",
+      "category": "模型描述与数值",
+      "title": "词表与交叉熵",
+      "criterion": "冻结词表、完整 logits 和监督 NLL 对应样本",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "冻结Tokenizer与完整数值词表logits、稳定交叉熵对应监督位置。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "const logits=",
+          "line": 57
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "对指定标签核对softmax与NLL。",
+        "error": "词表或Tokenizer与父模型不一致时拒绝。",
+        "recovery": "恢复匹配词表后模型能训练与推理。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD03",
+      "category": "模型描述与数值",
+      "title": "统一模型规格",
+      "criterion": "目标结构统一驱动资源、训练快照、检查点和服务资产",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Dense Atlas target/numeric规格冻结并驱动资源、训练、检查点和服务。",
+      "evidence": [
+        {
+          "path": "src/model-spec.js",
+          "anchor": "function freeze",
+          "line": 17
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "改变Atlas target尺寸并追踪所有派生资产。",
+        "error": "兼容model.json与canonical冲突时拒绝。",
+        "recovery": "统一两配置后重新检查提交生成一致摘要。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD04",
+      "category": "模型描述与数值",
+      "title": "目标张量与分片清单",
+      "criterion": "每层命名张量、维度、精度、rank 所有权与字节数可核对",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Dense Atlas全命名张量、维度、axis、rank分配和容量可追踪。",
+      "evidence": [
+        {
+          "path": "src/model-spec.js",
+          "anchor": "function inventory",
+          "line": 8
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "各rank张量计数/字节总和与完整清单相等。",
+        "error": "不可整除并行布局拒绝。",
+        "recovery": "合法布局生成可核对所有权和检查点容量。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD05",
+      "category": "模型描述与数值",
+      "title": "精度执行语义",
+      "criterion": "BF16/FP16/FP32 的舍入、溢出与状态存储相符",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "BF16/FP16/FP32转换、master和矩状态存在；部分native算子内部仍用JS双精度。",
+      "evidence": [
+        {
+          "path": "src/rank-numerics.js",
+          "anchor": "function cast",
+          "line": 4
+        }
+      ],
+      "missingMechanisms": [
+        "所有算子精度/累加/舍入边界一致定义",
+        "分布式与native全路径精度对照"
+      ],
+      "acceptanceCases": {
+        "normal": "同一运算按dtype对照舍入和累加参考。",
+        "error": "溢出或非法精度不得提交半更新。",
+        "recovery": "降低scale/调整dtype后状态继续一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD06",
+      "category": "模型描述与数值",
+      "title": "长上下文位置规则",
+      "criterion": "位置编码、上下文范围与截断策略一致并可测",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有数值上下文上限、位置检查和截断，目标长上下文与数值预算分离。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "function validate",
+          "line": 11
+        }
+      ],
+      "missingMechanisms": [
+        "完整位置/截断/滑窗与目标上下文因果",
+        "长序列资源及数值分块语义"
+      ],
+      "acceptanceCases": {
+        "normal": "长输入按声明策略保持位置和因果一致。",
+        "error": "超预算请求有准确边界而非静默截断监督。",
+        "recovery": "选择支持策略后增量与整段结果一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD07",
+      "category": "模型描述与数值",
+      "title": "Tokenizer 格式兼容",
+      "criterion": "特殊 Token、模板、词表与外部格式转换一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "自定义BPE、特殊Token和byte fallback存在。",
+      "evidence": [
+        {
+          "path": "src/corpus.js",
+          "anchor": "function tokenizer",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [
+        "官方Tokenizer JSON格式和chat template兼容",
+        "processor与工具调用/多模态Token协议"
+      ],
+      "acceptanceCases": {
+        "normal": "同一文本与官方Tokenizer得到相同Token和模板。",
+        "error": "缺失特殊Token或模板不匹配时阻止发布。",
+        "recovery": "补齐格式后外部加载与浏览器一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "MOD08",
+      "category": "模型描述与数值",
+      "title": "MoE 模型",
+      "criterion": "专家路由、负载与专家通信进入相同执行机制",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "GLM sigmoid top-k、校正偏置、共享专家和负载进入真实计算。",
+      "evidence": [
+        {
+          "path": "src/native-decoder.js",
+          "anchor": "function moe",
+          "line": 24
+        }
+      ],
+      "missingMechanisms": [
+        "跨rank专家分配与all-to-all通信",
+        "路由训练辅助机制、完整专家拓扑和负载故障"
+      ],
+      "acceptanceCases": {
+        "normal": "Token路由映射到实际专家owner/rank。",
+        "error": "某专家rank失联造成对应dispatch等待/失败。",
+        "recovery": "修复后恢复路由与参数更新且无丢Token。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "MOD09",
+      "category": "模型描述与数值",
+      "title": "多种模型结构",
+      "criterion": "非 Llama 架构能由同一描述系统正确表达",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "native描述已表达GLM/Qwen数值张量；其他领域仍参考MLP。",
+      "evidence": [
+        {
+          "path": "src/native-decoder.js",
+          "anchor": "function layerLayout",
+          "line": 5
+        }
+      ],
+      "missingMechanisms": [
+        "完整官方目标规格与数值/资源统一描述",
+        "世界/具身/决策骨干描述和资产契约"
+      ],
+      "acceptanceCases": {
+        "normal": "用同一结构描述实例化不同家族并贯通训练/发布。",
+        "error": "错误family/shape或父结构不一致被拒绝。",
+        "recovery": "合法结构可保存/加载并保持输出一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "MOD10",
+      "category": "模型描述与数值",
+      "title": "位置扩展策略",
+      "criterion": "所支持的位置扩展方法有数值与资源行为验证",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "仅固定rope_theta和最大位置；无YaRN等位置扩展。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "function validate",
+          "line": 11
+        }
+      ],
+      "missingMechanisms": [
+        "位置扩展策略配置、数值、资源与服务一致性"
+      ],
+      "acceptanceCases": {
+        "normal": "扩展策略改变位置频率并通过长前缀对照。",
+        "error": "非法缩放或加载不匹配时拒绝。",
+        "recovery": "恢复正确策略后训练和增量推理一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS01",
+      "category": "集群与分布式",
+      "title": "GPU 独占分配",
+      "criterion": "任务得到具体卡号，竞争任务不得重复占用",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Atlas、模型项目与服务共享具体GPU槽位，分配有独占检查。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.freeCards",
+          "line": 70
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "并发任务获取不重复卡号。",
+        "error": "资源不足保持PENDING而非抢占已占卡。",
+        "recovery": "释放任务/服务后排队任务取得空闲卡。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS02",
+      "category": "集群与分布式",
+      "title": "并行维度校验",
+      "criterion": "TP/PP/CP/DP 与节点、head 和 batch 约束一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "目标head/layers/context/batch与TP/PP/CP/DP约束联动。",
+      "evidence": [
+        {
+          "path": "src/model-spec.js",
+          "anchor": "function plan",
+          "line": 12
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "合法布局生成对应rank与分组。",
+        "error": "head、layer、seq或batch不能整除时拒绝。",
+        "recovery": "修正布局后卡数、梯度累积和资源一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS03",
+      "category": "集群与分布式",
+      "title": "1F1B 依赖与屏障",
+      "criterion": "计算和通信依赖完整后才提交全局更新",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "1F1B依赖图及全局commit屏障存在。",
+      "evidence": [
+        {
+          "path": "src/distributed.js",
+          "anchor": "function build",
+          "line": 30
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "每个micro的前后向和通信依赖完成后更新。",
+        "error": "缺失任务/通信未完成不得推进step或游标。",
+        "recovery": "依赖恢复后只提交一次全局更新。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS04",
+      "category": "集群与分布式",
+      "title": "共享资源与慢卡",
+      "criterion": "同端点争用与慢卡导致对应等待和耗时变化",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "同端点通道争用、GPU/fabric factor与任务耗时关联。",
+      "evidence": [
+        {
+          "path": "src/distributed.js",
+          "anchor": "function channels",
+          "line": 81
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "共享端点并发导致相应等待。",
+        "error": "慢卡延迟同组屏障而非所有任务同增。",
+        "recovery": "修复factor后后续步骤耗时恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS05",
+      "category": "集群与分布式",
+      "title": "通信故障原子性",
+      "criterion": "watchdog 定位 rank，未完成步骤不提交参数和游标",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "数值结果待屏障提交；watchdog故障drop未提交micro副本。",
+      "evidence": [
+        {
+          "path": "src/distributed.js",
+          "anchor": "function commit",
+          "line": 68
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "完整步骤原子提交参数和游标。",
+        "error": "通信中断时保留上次提交状态且定位rank。",
+        "recovery": "从检查点恢复后无双更新或跳样本。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS06",
+      "category": "集群与分布式",
+      "title": "逐 rank 数值分片",
+      "criterion": "数值张量按 TP/PP/CP 划分并实际传递，而非代表 rank 计算全模型",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有实际局部TP权重矩阵、CP行切分/KV收集、PP复制与摘要。",
+      "evidence": [
+        {
+          "path": "src/rank-numerics.js",
+          "anchor": "function linear",
+          "line": 12
+        }
+      ],
+      "missingMechanisms": [
+        "数值执行与每个1F1B事件完整绑定",
+        "各rank独立持久化状态/缓冲所有权"
+      ],
+      "acceptanceCases": {
+        "normal": "每个计算事件只读取其owner缓冲并产生通信消息。",
+        "error": "阻断消息使相关数值计算暂停且不能用全局旁路。",
+        "recovery": "恢复后输出/梯度与单rank参考一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS07",
+      "category": "集群与分布式",
+      "title": "跨布局状态重分片",
+      "criterion": "权重与优化器切换并行布局后保持可继续的状态",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "恢复可保存参数、optimizer、配置和同布局状态，跨布局映射不完整。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "type==='resume'",
+          "line": 102
+        }
+      ],
+      "missingMechanisms": [
+        "权重/master/moments与游标的跨TP/PP/CP重分片"
+      ],
+      "acceptanceCases": {
+        "normal": "布局变化后从旧checkpoint重建所有rank局部状态。",
+        "error": "缺分片或旧owner重叠明确失败。",
+        "recovery": "补齐后续训等价同一全局状态。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS08",
+      "category": "集群与分布式",
+      "title": "通信算法与重叠",
+      "criterion": "支持的 ring/tree 和计算通信重叠有对应资源调度",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "通信task/group/byte和端点争用存在。",
+      "evidence": [
+        {
+          "path": "src/distributed.js",
+          "anchor": "function comm",
+          "line": 33
+        }
+      ],
+      "missingMechanisms": [
+        "可执行ring/tree分步collective",
+        "真实计算/通信重叠和拓扑校准"
+      ],
+      "acceptanceCases": {
+        "normal": "不同算法形成不同消息步骤和链路占用。",
+        "error": "某hop阻断可定位消息/step。",
+        "recovery": "替换算法或修复链路后恢复一致归约结果。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS09",
+      "category": "集群与分布式",
+      "title": "高级任务调度",
+      "criterion": "优先级、抢占、联合分配和恢复有完整策略",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有priority、held、分区、DRAIN、walltime及资源排队。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "const queue=",
+          "line": 74
+        }
+      ],
+      "missingMechanisms": [
+        "完整优先级抢占/回填",
+        "checkpoint安全抢占、联合分配/重启策略"
+      ],
+      "acceptanceCases": {
+        "normal": "高优先级任务按声明策略排队或安全抢占。",
+        "error": "抢占中断不能留下卡号或半检查点。",
+        "recovery": "低优先级任务按策略恢复且状态不丢。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "DIS10",
+      "category": "集群与分布式",
+      "title": "专家与交错流水线",
+      "criterion": "EP/VPP/交错调度进入统一计算通信依赖",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "只有TP/PP/CP/DP主路径，没有EP/VPP任务拓扑。",
+      "evidence": [
+        {
+          "path": "src/distributed.js",
+          "anchor": "function build",
+          "line": 30
+        }
+      ],
+      "missingMechanisms": [
+        "专家并行和交错流水线",
+        "虚拟stage、路由与统一通信依赖"
+      ],
+      "acceptanceCases": {
+        "normal": "EP/VPP改变owner与流水线事件。",
+        "error": "专家或虚拟stage故障定位到对应依赖。",
+        "recovery": "修复后正确恢复路由和权重更新。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v6.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN01",
+      "category": "训练与调优",
+      "title": "全局批次梯度累积",
+      "criterion": "批内冻结参数，按有效 Token 或偏好对正确归约",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "整批计划、冻结参数、Token加权归约和全局Adam更新实现。",
+      "evidence": [
+        {
+          "path": "src/accumulation.js",
+          "anchor": "function create",
+          "line": 9
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "不等长micro与单批参考更新一致。",
+        "error": "缺micro或零监督Token阻止更新。",
+        "recovery": "补齐micro后仅一次更新且游标准确。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN02",
+      "category": "训练与调优",
+      "title": "AdamW 与学习率",
+      "criterion": "矩、裁剪、预热、衰减和权重衰减作用于实际更新",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "AdamW矩、裁剪、warmup/衰减与参数更新相连。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "function adam",
+          "line": 62
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "核对多个step的m/v、学习率和权重。",
+        "error": "非法学习率/非有限梯度不产生半更新。",
+        "recovery": "修正输入后恢复到上次有效optimizer状态。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN03",
+      "category": "训练与调优",
+      "title": "SFT 监督",
+      "criterion": "assistant mask 生效，提示词经注意力路径传递梯度",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Atlas assistant mask与prompt经attention影响实际梯度。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function makeBatch",
+          "line": 34
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "prompt不直接计loss但能影响answer和梯度。",
+        "error": "空completion/全零mask正确拒绝。",
+        "recovery": "修复样本后只有assistant监督位置计loss。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN04",
+      "category": "训练与调优",
+      "title": "DPO 参考策略",
+      "criterion": "冻结 reference 与 chosen/rejected 序列概率产生偏好梯度",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Atlas冻结reference与chosen/rejected序列产生DPO梯度。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function sampleLoss",
+          "line": 57
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "不等长偏好对按序列logprob比较并核对梯度。",
+        "error": "无有效偏好对或reference不匹配拒绝。",
+        "recovery": "修复数据后reference保持冻结，policy更新。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN05",
+      "category": "训练与调优",
+      "title": "激活重计算",
+      "criterion": "重建可微图，更新与保留激活路径保持一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "activation_recompute按需重建可微前向图。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function forward",
+          "line": 32
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "与保留激活路径比较loss/梯度/更新。",
+        "error": "重计算时权重快照不同必须拒绝。",
+        "recovery": "相同快照重计算与原路径一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN06",
+      "category": "训练与调优",
+      "title": "超参数实验隔离",
+      "criterion": "实验冻结独立配置、数据和源码，通过资源队列运行",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "实验冻结recipe/source/data并独立排队，权重状态不相互污染。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function snapshot",
+          "line": 51
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "并行实验改不同超参产生独立指标与参数。",
+        "error": "共享资源不足时等待而非互相覆盖。",
+        "recovery": "重载存档后每次运行数据和源码摘要不变。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN07",
+      "category": "训练与调优",
+      "title": "混合精度稳定性",
+      "criterion": "支持的精度、loss scaling、非有限梯度与跳步策略一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有FP16 loss scaling、溢出跳步、FP32 master/moments和持久化。",
+      "evidence": [
+        {
+          "path": "src/rank-numerics.js",
+          "anchor": "function adam",
+          "line": 17
+        }
+      ],
+      "missingMechanisms": [
+        "所有模型/算子梯度精度与scaler一致",
+        "overflow/underflow及累积全路径对照"
+      ],
+      "acceptanceCases": {
+        "normal": "连续有限步与溢出步对照scaler和optimizer计数。",
+        "error": "任何rank溢出时所有rank共同跳步。",
+        "recovery": "scale下降后恢复有限梯度并原子更新。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN08",
+      "category": "训练与调优",
+      "title": "评测与质量工程",
+      "criterion": "任务基准、数据偏差、质量阈值和发布决策可复核",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "有固定holdout、loss/字符F1/关键词门槛和报告。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function characterF1",
+          "line": 5
+        }
+      ],
+      "missingMechanisms": [
+        "任务型基准/数据偏差/统计稳定性",
+        "跨领域评测版本与权重、数据、源码严格绑定"
+      ],
+      "acceptanceCases": {
+        "normal": "同一候选按固定协议产生可复核指标。",
+        "error": "数据泄漏、报告过期或候选改变禁止发布。",
+        "recovery": "重新评测正确候选后才可导出。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "TRN09",
+      "category": "训练与调优",
+      "title": "LoRA 与 QLoRA",
+      "criterion": "适配器、冻结参数、量化、合并与导出形成完整链路",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "尚无adapter/低比特基座训练对象。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "function layout",
+          "line": 18
+        }
+      ],
+      "missingMechanisms": [
+        "LoRA/QLoRA参数、冻结、量化和optimizer所有权",
+        "adapter检查点、合并、导出与服务"
+      ],
+      "acceptanceCases": {
+        "normal": "仅adapter更新，基座冻结且资源预算减少。",
+        "error": "结构或基座摘要不匹配拒绝加载。",
+        "recovery": "adapter合并前后推理在声明误差内一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "TRN10",
+      "category": "训练与调优",
+      "title": "强化学习后训练",
+      "criterion": "奖励、rollout、策略更新与评测形成完整链路",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "后训练实现SFT/DPO，尚无rollout/reward/policy更新。",
+      "evidence": [
+        {
+          "path": "src/learning.js",
+          "anchor": "function sampleLoss",
+          "line": 57
+        }
+      ],
+      "missingMechanisms": [
+        "奖励、rollout、KL/优势/策略目标",
+        "训练与服务、数据、评测的完整循环"
+      ],
+      "acceptanceCases": {
+        "normal": "采样输出产生奖励并实际改变policy参数。",
+        "error": "无效奖励/采样不足不得伪造成功更新。",
+        "recovery": "修复奖励或样本后恢复可复现训练。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "ART01",
+      "category": "检查点与产物",
+      "title": "完整检查点提交",
+      "criterion": "分片和状态完整才更新 latest，摘要可校验",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "检查点分片、payload、metadata、checksum及latest提交联动。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.verifyCheckpoint",
+          "line": 81
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "全部分片完成后更新latest。",
+        "error": "缺任意分片/摘要不符不能验收完成。",
+        "recovery": "修复有效源后重新写入并验证全部分片。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART02",
+      "category": "检查点与产物",
+      "title": "检查点写入失败",
+      "criterion": "断链、掉电、容量不足和损坏不发布半成品",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "断存储/掉电/容量不足使WRITING失败/ABORTED。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.advanceCheckpoints",
+          "line": 85
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "正常I/O按带宽推进到COMMITTED。",
+        "error": "断电或满盘时不发布半成品。",
+        "recovery": "清理/恢复后从前个完整检查点重试。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART03",
+      "category": "检查点与产物",
+      "title": "训练状态恢复",
+      "criterion": "模型、优化器、RNG 与数据游标精确恢复",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "保存模型、optimizer、data cursor、RNG与冻结输入；同协议可恢复。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "function payload",
+          "line": 78
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "保存/重载后继续结果等价未中断训练。",
+        "error": "损坏payload或未提交源拒绝恢复。",
+        "recovery": "用前个有效检查点继续且RNG/游标准确。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART04",
+      "category": "检查点与产物",
+      "title": "数值权重格式",
+      "criterion": "实际 safetensors 字节、矩阵轴与重新加载一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "实际F64 safetensors字节、header/offset/轴与反序列化实现。",
+      "evidence": [
+        {
+          "path": "src/transformer-tools.js",
+          "anchor": "function serialize",
+          "line": 5
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "独立读取header和命名权重并精确往返。",
+        "error": "坏header/shape/offset/尾部长度拒绝。",
+        "recovery": "重新导出合法资产后参数逐项一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART05",
+      "category": "检查点与产物",
+      "title": "模型转换生命周期",
+      "criterion": "staging、失败重试、校验和注册为原子流程",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "staging、I/O阶段、失败、校验和最终注册分离。",
+      "evidence": [
+        {
+          "path": "src/artifacts.js",
+          "anchor": "W.prototype.advanceConversion",
+          "line": 5
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "完整转换后模型才注册。",
+        "error": "源损坏/存储断开时仅留下FAILED staging。",
+        "recovery": "恢复后重试生成完整模型且无重复版本污染。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART06",
+      "category": "检查点与产物",
+      "title": "目标分片容量一致",
+      "criterion": "各 rank 的检查点字节由目标张量和优化器所有权生成",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Dense Atlas checkpoint总量和每rank字节来自target所有权。",
+      "evidence": [
+        {
+          "path": "src/model-contract.js",
+          "anchor": "const verify=",
+          "line": 6
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "不均匀stage下逐rank字节与张量求和一致。",
+        "error": "篡改metadata/shard容量校验失败。",
+        "recovery": "恢复一致清单后检查点有效。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART07",
+      "category": "检查点与产物",
+      "title": "目标导出资产一致",
+      "criterion": "模型配置、权重映射和容量来自冻结的模型规格",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Dense Atlas导出config/index/shard/tensor列表和容量统一。",
+      "evidence": [
+        {
+          "path": "src/model-contract.js",
+          "anchor": "const assets=",
+          "line": 7
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "导出各资产与冻结model-spec逐项核对。",
+        "error": "缺tensor、错dtype或总容量不符拒绝加载。",
+        "recovery": "修复资产后服务重新加载匹配版本。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART08",
+      "category": "检查点与产物",
+      "title": "完整外部模型加载",
+      "criterion": "权重、Tokenizer、模板和配置通过外部工具加载",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "浏览器自定义数值资产可内部加载，未证明官方外部工具兼容。",
+      "evidence": [
+        {
+          "path": "src/transformer-tools.js",
+          "anchor": "function writeAssets",
+          "line": 7
+        }
+      ],
+      "missingMechanisms": [
+        "官方config/tokenizer/chat template/processor格式",
+        "选定外部工具真实加载对照"
+      ],
+      "acceptanceCases": {
+        "normal": "用外部工具加载导出小尺寸模型并前向核对。",
+        "error": "不兼容名称/模板有明确失败与转换说明。",
+        "recovery": "修复映射后内外输出一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART09",
+      "category": "检查点与产物",
+      "title": "协议与版本迁移",
+      "criterion": "历史模型和中断状态在声明范围内可追踪迁移",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "存在旧存档升级及旧decoder/eval协议迁移分支。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "function prepare",
+          "line": 17
+        }
+      ],
+      "missingMechanisms": [
+        "声明版本矩阵与逐版本恢复证据",
+        "中断任务/新字段原子迁移和失败回退"
+      ],
+      "acceptanceCases": {
+        "normal": "逐历史版本存档升级并继续已声明任务。",
+        "error": "无法迁移时保留原存档并说明具体字段。",
+        "recovery": "恢复原版本或修正迁移后能继续。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "ART10",
+      "category": "检查点与产物",
+      "title": "任意并行布局续训",
+      "criterion": "检查点切换 TP/PP/CP 后重分片并继续训练",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "尚未具备任意并行布局通用checkpoint重分片器。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "type==='resume'",
+          "line": 102
+        }
+      ],
+      "missingMechanisms": [
+        "跨任意TP/PP/CP的完整optimizer和权重重排",
+        "验证和恢复协议"
+      ],
+      "acceptanceCases": {
+        "normal": "跨布局重分片后续训等价同一全局模型。",
+        "error": "owner缺失/重复或形状不一致拒绝。",
+        "recovery": "合法目标布局重新分配后可继续。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV01",
+      "category": "推理与发布",
+      "title": "数值 KV 与增量生成",
+      "criterion": "逐层 KV 生成与整段前向保持一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "有逐层数值KV、prefill和增量decode，整段/增量可核对。",
+      "evidence": [
+        {
+          "path": "src/transformer-decoder.js",
+          "anchor": "function",
+          "line": 2
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "相同前缀逐Token解码与整段前向一致。",
+        "error": "错误版本/形状缓存不得复用。",
+        "recovery": "清空并重算缓存后结果一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV02",
+      "category": "推理与发布",
+      "title": "采样与停止",
+      "criterion": "温度、top-p、greedy、停止串和 RNG 可复现",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "温度、top-p、greedy、stop和持久RNG驱动实际采样。",
+      "evidence": [
+        {
+          "path": "src/decoder.js",
+          "anchor": "function",
+          "line": 2
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "相同seed复现输出，stop/长度正确结束。",
+        "error": "非法采样参数明确拒绝。",
+        "recovery": "恢复RNG后继续等价未暂停请求。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV03",
+      "category": "推理与发布",
+      "title": "请求生命周期",
+      "criterion": "排队、暂停、取消、deadline 和抢占影响同一请求",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Atlas请求排队、lease、暂停/取消、deadline、抢占和资源释放实现。",
+      "evidence": [
+        {
+          "path": "src/serving.js",
+          "anchor": "W.prototype.advanceServing",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "请求在同一对象中经历排队/prefill/decode/结束。",
+        "error": "超时、取消和OOM释放正确KV lease。",
+        "recovery": "副本恢复后合法请求重新调度无重复token。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV04",
+      "category": "推理与发布",
+      "title": "前缀缓存与隔离",
+      "criterion": "同版本复用真实 KV，引用、驱逐和重计算一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "按assetDigest隔离前缀，真实numericCache有引用/驱逐/重计算。",
+      "evidence": [
+        {
+          "path": "src/serving.js",
+          "anchor": "function cached",
+          "line": 18
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "同版本前缀命中减少实际prefill计算。",
+        "error": "版本改变或被引用缓存不能错误复用/驱逐。",
+        "recovery": "内存压力后重算仍保持输出与RNG一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV05",
+      "category": "推理与发布",
+      "title": "灰度与故障恢复",
+      "criterion": "版本路由、回滚、活动请求绑定和副本恢复一致",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Atlas副本健康、灰度、回滚及活动请求版本绑定存在。",
+      "evidence": [
+        {
+          "path": "src/serving.js",
+          "anchor": "W.prototype.advanceDeployment",
+          "line": 21
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "新请求按灰度路由，旧请求绑定原asset。",
+        "error": "副本失联后请求失败/恢复与版本可追踪。",
+        "recovery": "回滚后新请求回旧版本且活动请求不串模。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV06",
+      "category": "推理与发布",
+      "title": "模型与 KV 容量",
+      "criterion": "GPU 权重与 KV 字节由冻结目标形状和精度计算并限制分配",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "Dense Atlas模型权重、KV预留和实际使用按target形状约束显存。",
+      "evidence": [
+        {
+          "path": "src/model-contract.js",
+          "anchor": "function footprint",
+          "line": 3
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "提高KV池显示预留变化但实际使用按Token变化。",
+        "error": "灰度共存或KV预留超预算拒绝且保留原服务。",
+        "recovery": "降低容量后合法配置生效。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v8.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV07",
+      "category": "推理与发布",
+      "title": "性能校准",
+      "criterion": "吞吐、批次、显存带宽与网络模型有参考轨迹和误差范围",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "吞吐/延迟由credit、batch和资源factor模型推演。",
+      "evidence": [
+        {
+          "path": "src/serving.js",
+          "anchor": "W.prototype.advanceServing",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [
+        "官方或硬件参考轨迹校准",
+        "不同模型、精度和负载的误差范围"
+      ],
+      "acceptanceCases": {
+        "normal": "固定负载与参考曲线比较吞吐/TTFT/显存。",
+        "error": "超出校准范围明确标记数据不足。",
+        "recovery": "调整模型参数后通过保留验证负载。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV08",
+      "category": "推理与发布",
+      "title": "API 与流式协议",
+      "criterion": "HTTP 状态、SSE、背压、重试与断连语义完整",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "虚拟curl和UI能访问请求状态，未有完整HTTP/SSE连接语义。",
+      "evidence": [
+        {
+          "path": "src/serving.js",
+          "anchor": "W.prototype.command",
+          "line": 64
+        }
+      ],
+      "missingMechanisms": [
+        "状态码/头/SSE事件协议",
+        "背压、断连、重试与重连"
+      ],
+      "acceptanceCases": {
+        "normal": "逐事件流式输出对应真实请求token。",
+        "error": "客户端断开/慢读触发资源和状态变化。",
+        "recovery": "重试按幂等/恢复规则且无重复生成。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "SRV09",
+      "category": "推理与发布",
+      "title": "量化推理",
+      "criterion": "支持的低比特权重与 KV 格式有数值和资源验证",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "partial",
+      "reason": "只有浮点权重精度，无低比特推理量化机制。",
+      "evidence": [
+        {
+          "path": "src/transformer.js",
+          "anchor": "function layout",
+          "line": 18
+        }
+      ],
+      "missingMechanisms": [
+        "INT8/INT4等权重/KV存储、scale与计算",
+        "量化误差、资源和加载验证"
+      ],
+      "acceptanceCases": {
+        "normal": "量化改变真实权重表示及显存预算。",
+        "error": "坏scale/不支持格式拒绝。",
+        "recovery": "反量化或重新量化后误差在声明阈值。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      },
+      "implementationEvidence": {
+        "source": [
+          "src/engineering.js",
+          "src/adaptation.js",
+          "src/service-protocol.js",
+          "src/domain-kernels.js"
+        ],
+        "test": "verify-v11.cjs",
+        "scope": "v0.11 implemented supported mechanics; whole original compatibility criterion still not accepted"
+      }
+    },
+    {
+      "id": "SRV10",
+      "category": "推理与发布",
+      "title": "高级推理调度",
+      "criterion": "投机解码和 Prefill/Decode 分离进入相同资源模型",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "存在prefill/decode阶段，未支持draft或跨节点PD分离。",
+      "evidence": [
+        {
+          "path": "src/serving.js",
+          "anchor": "W.prototype.advanceServing",
+          "line": 31
+        }
+      ],
+      "missingMechanisms": [
+        "投机解码draft/verify/accept/reject",
+        "Prefill/Decode独立资源与KV传输"
+      ],
+      "acceptanceCases": {
+        "normal": "启用draft或PD部署产生对应资源与消息。",
+        "error": "draft拒绝或KV传输失败有正确回退。",
+        "recovery": "回退普通decode后输出分布/状态保持正确。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO01",
+      "category": "现场、软件与验收",
+      "title": "第一人称工位操作",
+      "criterion": "移动、设备距离、机柜操作和工位界面共享状态",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "第一人称机房、设备、距离交互与工位共享工程状态。",
+      "evidence": [
+        {
+          "path": "src/scene.js",
+          "anchor": "function frame",
+          "line": 60
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "移动至设备操作后在工位看到同一状态。",
+        "error": "距离不足或机柜未开阻止指定物理操作。",
+        "recovery": "走近/开门后成功且设备日志对应。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO02",
+      "category": "现场、软件与验收",
+      "title": "工程持久化",
+      "criterion": "导入、导出、重置和自动保存隔离并保持原子性",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "complete",
+      "status": "complete",
+      "reason": "IndexedDB事务、coalesced保存、replace epoch及导入/重置路径存在。",
+      "evidence": [
+        {
+          "path": "src/storage.js",
+          "anchor": "api.replace=",
+          "line": 12
+        }
+      ],
+      "missingMechanisms": [],
+      "acceptanceCases": {
+        "normal": "导出/导入后工程对象一致并可继续。",
+        "error": "并发保存/导入失败不覆盖有效工程。",
+        "recovery": "恢复有效存档后任务和请求状态一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO03",
+      "category": "现场、软件与验收",
+      "title": "Slurm 工具工作流",
+      "criterion": "固定版本的命令、状态、错误与操作路径完成对照",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "Slurm声明命令子集与任务状态相连，未做版本对照。",
+      "evidence": [
+        {
+          "path": "src/terminal.js",
+          "anchor": "function queue",
+          "line": 25
+        }
+      ],
+      "missingMechanisms": [
+        "固定Slurm版本命令/界面/退出码参考",
+        "完整正常/错误/恢复路径对照"
+      ],
+      "acceptanceCases": {
+        "normal": "同一操作在选定Slurm参考与本系统记录结果。",
+        "error": "非法参数/服务中断错误路径一致。",
+        "recovery": "恢复服务后的查询和任务状态一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO04",
+      "category": "现场、软件与验收",
+      "title": "IDE 原生界面",
+      "criterion": "固定版本 IDE 的菜单、布局、快捷键和开发路径完成对照",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "文件/搜索/页签/断点/变量已实现，界面为自制Code工作区。",
+      "evidence": [
+        {
+          "path": "src/studio.js",
+          "anchor": "U.views.code",
+          "line": 6
+        }
+      ],
+      "missingMechanisms": [
+        "固定VS Code版本菜单、布局、快捷键",
+        "LSP/DAP、扩展与真实训练调试流程"
+      ],
+      "acceptanceCases": {
+        "normal": "固定开发剧本逐屏、逐快捷键对照。",
+        "error": "语法/导入/断点错误给相同操作后果。",
+        "recovery": "修复和重新运行路径保持一致。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO05",
+      "category": "现场、软件与验收",
+      "title": "MLflow 原生界面",
+      "criterion": "固定版本的实验、指标、资产和模型管理完成对照",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "实验指标、对比、模型资产和血缘存在，自制工作区未逐屏对照。",
+      "evidence": [
+        {
+          "path": "src/distributed-ui.js",
+          "anchor": "function experiments",
+          "line": 16
+        }
+      ],
+      "missingMechanisms": [
+        "MLflow固定版本导航/筛选/详情/资产操作",
+        "模型注册/版本状态原生路径与错误"
+      ],
+      "acceptanceCases": {
+        "normal": "按官方界面完成实验搜索、对比和模型注册。",
+        "error": "坏筛选/丢资产/服务中断与参考操作一致。",
+        "recovery": "恢复后原实验和版本关系保留。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO06",
+      "category": "现场、软件与验收",
+      "title": "Grafana 查询工作流",
+      "criterion": "时间范围、查询、仪表盘和告警完成对照",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "监控采集和GPU/服务视图存在，未实现完整Grafana/PromQL工作流。",
+      "evidence": [
+        {
+          "path": "src/operations.js",
+          "anchor": "monitor",
+          "line": 4
+        }
+      ],
+      "missingMechanisms": [
+        "时间范围和PromQL查询引擎",
+        "仪表盘配置、变量与告警规则生命周期"
+      ],
+      "acceptanceCases": {
+        "normal": "查询相同指标和时间范围显示对应序列。",
+        "error": "非法查询/数据源断开/告警触发可诊断。",
+        "recovery": "修复数据源后序列和告警恢复并保留事件。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO07",
+      "category": "现场、软件与验收",
+      "title": "跨系统证据关联",
+      "criterion": "日志、指标、文件、事件和操作记录可关联同一原因",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "节点/服务/作业ID和日志指标共享部分状态。",
+      "evidence": [
+        {
+          "path": "src/runtime.js",
+          "anchor": "W.prototype.collectMetrics",
+          "line": 91
+        }
+      ],
+      "missingMechanisms": [
+        "统一事件/trace/causal ID贯穿所有系统",
+        "数据、ModelLab与服务的完整证据关联"
+      ],
+      "acceptanceCases": {
+        "normal": "从一次失败定位到配置、进程、rank和指标。",
+        "error": "多个并发故障不能串错原因。",
+        "recovery": "修复对应原因后所有相关系统一致恢复。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO08",
+      "category": "现场、软件与验收",
+      "title": "全场景兼容验收",
+      "criterion": "每个场景正常、错误和恢复路径均有可审查证据",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "partial",
+      "status": "partial",
+      "reason": "存在固定100项内部台账与分版本检查；旧状态未反映v0.10新增能力。",
+      "evidence": [
+        {
+          "path": "src/acceptance.js",
+          "anchor": "function summary",
+          "line": 27
+        }
+      ],
+      "missingMechanisms": [
+        "逐条正常/错误/恢复的可审查证据包",
+        "跨域覆盖矩阵和外部对照"
+      ],
+      "acceptanceCases": {
+        "normal": "每条有源码、行为、测试及复核记录。",
+        "error": "缺证据或部分实现不得记为已闭环。",
+        "recovery": "补齐证据后独立复核再变更状态。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO09",
+      "category": "现场、软件与验收",
+      "title": "真实软件参考轨迹",
+      "criterion": "声明的软件版本有外部采集的截图、日志、退出码和指标轨迹",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "所有条目externalComparison为false，没有外部采集轨迹。",
+      "evidence": [
+        {
+          "path": "src/acceptance.js",
+          "anchor": "externalComparison:false",
+          "line": 26
+        }
+      ],
+      "missingMechanisms": [
+        "真实软件固定版本截图/日志/退出码/指标轨迹"
+      ],
+      "acceptanceCases": {
+        "normal": "采集可重放的真实软件参考工程。",
+        "error": "环境/版本差异被记录而非混入成功。",
+        "recovery": "匹配版本重放后可逐步比较。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    },
+    {
+      "id": "UXO10",
+      "category": "现场、软件与验收",
+      "title": "完整现场实操对照",
+      "criterion": "从空机房到故障恢复和交付的第一人称剧本通过外部对照",
+      "scope": "原固定 Dense Atlas 100项；跨域限制另列，不能作为全产品真实性比例",
+      "previousStatus": "missing",
+      "status": "missing",
+      "reason": "尚无完整现场至交付/恢复的外部对照验收。",
+      "evidence": [
+        {
+          "path": "src/acceptance.js",
+          "anchor": "externalComparison:false",
+          "line": 26
+        }
+      ],
+      "missingMechanisms": [
+        "从空机房到模型交付的完整实操剧本",
+        "第三方或独立外部复核证据"
+      ],
+      "acceptanceCases": {
+        "normal": "端到端完成安装、数据、训练、发布和故障恢复。",
+        "error": "故障注入产生同一原因的多系统证据。",
+        "recovery": "修复后续训与发布通过独立对照。"
+      },
+      "externalComparison": {
+        "accepted": false,
+        "reason": "未采集固定真实软件版本的参考轨迹"
+      },
+      "testReview": {
+        "existingTestFile": "verify-v7.cjs",
+        "basis": "源码行为审查；测试数量不推导真实性。新补项须补对应normal/error/recovery断言。"
+      }
+    }
+  ],
+  "implementationVersion": "0.11.0",
+  "followup": {
+    "resolved": [
+      "AUD-001",
+      "AUD-002",
+      "AUD-003",
+      "AUD-004",
+      "AUD-005",
+      "AUD-007",
+      "AUD-009",
+      "AUD-011",
+      "AUD-012"
+    ],
+    "partial": [
+      "AUD-006",
+      "AUD-008",
+      "AUD-010"
+    ],
+    "evidence": [
+      "verify-v11.cjs",
+      "verify-domain-reference.py",
+      "verify-native-reference.py"
+    ],
+    "extraCorrection": "Qwen split-half mRoPE corrected in native-ops-v2; full-attention sigmoid retained; empty DeepStack indexes removed from this checkpoint gap."
+  },
+  "implementationSummary": {
+    "complete": 49,
+    "partial": 44,
+    "missing": 7,
+    "scope": "original Dense Atlas 100 scenarios; not total-product fidelity"
+  }
+}

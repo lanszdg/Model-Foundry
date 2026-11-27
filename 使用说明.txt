@@ -1,4 +1,4 @@
-MODEL FOUNDRY v0.10.0
+MODEL FOUNDRY v0.11.0
 
 打开 index.html 即可运行（源码仓库也提供 dist/index.html）。HTML 内已包含全部样式、脚本和 3D 场景，无外部依赖。
 
@@ -81,3 +81,14 @@ v0.10 原生算子与源码调试
 Code → 调试示例 → 点击第 10 行号 → 调试 F5 → 继续 F5，即可停在该行。输入 global_batch / micro_batch 添加 Watch。F10 越过语句，F11 进入函数，输出在调试控制台。
 搜索栏可跨项目文本文件搜索并跳转到行；检查当前文件执行实际语法或配置检查。修改源码后重新启动调试才使用新快照。
 体验包新增“工程存档/原生模型与调试工程.json”，包含 Qwen 视觉对齐、SFT、评测、导出与部署。具体架构尺寸、可用 Python 子集与剩余范围见 docs/原生算子与源码调试验收.md。
+
+
+v0.11 完整审查与工程机制
+工位 → 工程环境与数据任务：创建/激活venv、安装依赖、容器、Source Control、数据任务、RDMA配置和领域算子。项目准备环境会构建隔离依赖记录。
+在内置终端执行 python -m venv .venv；source .venv/bin/activate；pip install transformers==5.24.1 numpy==2.5.5 torch==2.15.0。与tokenizers==0.22.0同时指定时会产生真实约束冲突，修正后重新安装。
+Data jobs 提交任务；暂停时钟可先注入分区故障，再继续观察重试与失败；Retry incomplete 保留已提交分区并恢复。
+模型项目 recipe.json 的 method 可选 full/lora/qlora/grpo，rank控制适配器秩，quantizationBits可选4/8用于导出后重新验证。train.py里的loss_weight(step)实际缩放损失与梯度，提交时冻结。
+MLflow运行页聚合Atlas与模型项目，支持 status = 'COMPLETED' and metrics.loss < 10 筛选，点击运行查看真实配置、指标与产物。
+Grafana → Explore 执行 avg(DCGM_FI_DEV_GPU_UTIL)，Alerting创建阈值/待定/恢复保持规则。停监控exporter会进入NoData。
+API → HTTP / SSE inspector 对部署的原生文本/多模态模型或Atlas发送请求，可分块读取、停止读取触发背压、断连取消；内置终端也可curl提交并用apictl read STREAM_ID读取。
+工程存档/完整审查与工程机制.json 是已完成Qwen适配器训练与发布的暂停工程。审查的完整100项与剩余差距见 docs/完整工程审查与落地.md 和 docs/完整工程审查记录.json。

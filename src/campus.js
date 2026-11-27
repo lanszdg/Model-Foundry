@@ -1,7 +1,7 @@
 (function(){'use strict';
 const U=FoundryUI,E=engine,$=id=>document.getElementById(id),esc=U.esc,button=U.button,status=U.status,fmt=U.fmt;
 let device=null,deviceTab='hardware',serviceEdit='storage',wire=null,lastDevice='',selectedRecord=null,selectedJob=null,compareIds=[],modelTab='registry',metricsWindow=60;
-const names={modelLab:'Model Foundry · 模型工程',overview:'工程工单',infra:'BMC · 节点与服务',data:'Corpus Studio',code:'Code · ATLAS Workspace',jobs:'MLflow · Experiments',models:'MLflow · Model Registry',serve:'Atlas API · Playground',terminal:'Terminal',monitor:'Grafana · Cluster Overview'};
+const names={engineering:'工程环境与数据任务',modelLab:'Model Foundry · 模型工程',overview:'工程工单',infra:'BMC · 节点与服务',data:'Corpus Studio',code:'Code · ATLAS Workspace',jobs:'MLflow · Experiments',models:'MLflow · Model Registry',serve:'Atlas API · Playground',terminal:'Terminal',monitor:'Grafana · Cluster Overview'};
 U.apps.forEach(a=>a[1]=names[a[0]]);U.apps.push(['monitor','监控看板']);
 const stageTag=j=>j?.stage?.toUpperCase()||'—';
 const exportText=(name,text,type='text/plain')=>{const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);};
