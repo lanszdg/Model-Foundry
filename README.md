@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.8.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.9.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -85,6 +85,23 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **工程导出与导入**：保存多个工程分支，便于复盘和比较。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
+
+## v0.9 · 从一个模型，扩展到多种工程世界
+
+![语言、多模态、世界模型、具身与决策的不同工程路线](assets/open-model-world.svg)
+
+**选择模型之后，数据、环境、训练阶段和交付形式一起改变。**
+
+按 2026-11-27 官方公开获取状态核查，目录包含 GLM-5.3、DeepSeek-V4.1-Flash-1017、Qwen3.8-27B、V-JEPA 2.1、Cosmos3-Nano、GR00T N1.7 和 VLA-JEPA。GLM-5.4 保留在发布观察，等待官方权重开放。每个入口都有官方资料来源。
+
+从模型目录创建项目后，可以编辑专属数据和配方、准备环境、占用机房里的 GPU、提交各阶段、检查数值分片、评测并部署。同一批节点、存储、文件、调度与监控贯穿这些操作。机器人数据需要状态、动作和时间同步，世界模型需要视频与未来预测目标；它们拥有自己的工程图。
+
+- **训练可以核对**：局部矩阵实际参与前向与反向，记录切分区间、梯度和通信摘要。
+- **精度产生后果**：BF16/FP16 舍入、FP32 master 与 moments、FP16 溢出跳步及 loss scaling 随状态保存。
+- **发布需要证据**：独立验证集与闭环距离门槛决定评测是否通过，导出检查当前协议的报告。
+- **服务可以操作**：发送样本请求，检查绑定版本的动作、潜表示或数值输出，以及策略控制的反馈轨迹。
+
+本轮使用可训练的有预算参考内核组织工程体验。各原生模型的 DSA、Engram、视觉编码器、VAE/DiT 等尚未完整逐算子复刻；目录和阶段流程的接通不代表已在浏览器训练这些官方完整模型。实现、具体差异与验收路径见 [开放模型工程与数值分片验收](docs/开放模型工程与数值分片验收.md)。原有 Dense Atlas 的 100 项清单仍为 49 项闭环，多领域扩展单独记录。
 
 ## v0.8 · 一份规格，连接每一步工程决策
 
@@ -254,7 +271,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.8.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.9.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -272,6 +289,10 @@ Model-Foundry/
 │   ├── runtime.js      # 进程、配置快照、资源调度与分片提交
 │   ├── python.js       # AST、项目模块与源文件错误定位
 │   ├── corpus.js       # 数据治理、版本、Tokenizer 与 Packing
+│   ├── model-catalog.js # 最新可获取模型、官方来源和领域阶段
+│   ├── model-lab.js    # 分领域项目、共享资源、训练与策略服务
+│   ├── model-lab-ui.js # 模型目录、工程图、文件与闭环工作台
+│   ├── rank-numerics.js # 实际局部矩阵、通信与混合精度
 │   ├── model-spec.js  # 统一目标模型、命名张量与逐卡所有权
 │   ├── terminal.js    # Shell 数据流、退出码与严格查询参数
 │   ├── model-contract.js # 任务、转换、服务资产与容量契约
@@ -305,6 +326,7 @@ Model-Foundry/
 ├── verify-v5.cjs       # 独立计分、单步采样与暂停恢复验收
 ├── verify-v6.cjs       # 逐卡依赖、全局梯度与资源故障验收
 ├── verify-v7.cjs       # 梯度、数值缓存、权重字节与全流程验收
+├── verify-v9.cjs       # 数值分片、AMP 与各领域工程验收
 ├── verify-v8.cjs       # Tensor、Shell、模型一致性与服务预算验收
 ├── progress.mjs        # 生成工程场景完成度清单
 ├── verify-transformer-reference.py # 可选的独立 NumPy 前向参考
