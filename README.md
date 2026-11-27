@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.7.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.8.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -85,6 +85,30 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **工程导出与导入**：保存多个工程分支，便于复盘和比较。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
+
+## v0.8 · 一份规格，连接每一步工程决策
+
+![同一模型规格驱动资源、检查点与服务](assets/model-contract.svg)
+
+**你修改的模型结构，应该真正改变后面的资源、文件和服务。**
+
+新任务统一读取 `model-spec.json`，提交时冻结。Atlas 70B 的 723 个命名张量、70,553,706,496 个逻辑参数，从张量形状逐项得出，再进入逐卡资源、流水线范围、检查点和模型转换。推理端也从相同规格计算权重与 KV 容量，错误配置在破坏已有服务之前失败。
+
+| 工程决策 | 可以核对的后果 |
+| :--- | :--- |
+| 调整模型结构 | 新任务重新生成张量形状、资源预算与冻结产物 |
+| 选择一张 GPU | 看到切分轴、实际区间、本地张量和优化器容量 |
+| 写入或恢复检查点 | 分片容量符合各 rank 的所有权，状态接续一致 |
+| 转换和加载模型 | 校验所有张量、配置、Tokenizer、精度及容量 |
+| 调整 KV 或灰度发布 | 检查显存与版本共存预算，失败保留原服务 |
+| 在终端组合命令 | 引号、变量、管道、重定向和退出码参与实际执行 |
+| 修改 Python 张量操作 | reshape、索引、归约保留形状和梯度，错误准确失败 |
+
+终端现在可以执行 `printf "a\nb\na\n" | grep -n a | wc -l`，也能用带筛选与格式参数的 Slurm 查询查看同一份任务状态。Tensor 与终端遵循明确的支持范围；详情见 [统一模型与操作语义验收](docs/统一模型与操作语义验收.md)。
+
+**完成度可以逐项追踪。** 按固定 100 项工程场景自评，v0.7 为 41 项闭环，v0.8 为 **49 项闭环、34 项部分实现、17 项未实现**。部分实现不折算分数；49% 是内部场景闭环率，不是工程真实性百分比。外部软件逐项对照尚未验收。完整定义和缺口见 [工程场景完成度清单](docs/工程场景完成度清单.md)。
+
+本版通过 **795 项内部检查**与独立 NumPy Transformer 前向参考；检查数量和场景完成度分别记录。目标 70B 分片是虚拟工程资产，浏览器实际数值模型沿用下方说明的有预算 Transformer。
 
 ## v0.7 · 模型内部，也成为可以操作的现场
 
@@ -230,7 +254,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.7.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.8.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -248,6 +272,10 @@ Model-Foundry/
 │   ├── runtime.js      # 进程、配置快照、资源调度与分片提交
 │   ├── python.js       # AST、项目模块与源文件错误定位
 │   ├── corpus.js       # 数据治理、版本、Tokenizer 与 Packing
+│   ├── model-spec.js  # 统一目标模型、命名张量与逐卡所有权
+│   ├── terminal.js    # Shell 数据流、退出码与严格查询参数
+│   ├── model-contract.js # 任务、转换、服务资产与容量契约
+│   ├── acceptance.js  # 固定 100 项场景与完成度口径
 │   ├── transformer.js # RMSNorm / RoPE / GQA / SwiGLU 与反向传播
 │   ├── transformer-decoder.js # 每层数值 KV 与增量解码
 │   ├── transformer-tools.js # 张量检查与 safetensors 资产
@@ -277,6 +305,8 @@ Model-Foundry/
 ├── verify-v5.cjs       # 独立计分、单步采样与暂停恢复验收
 ├── verify-v6.cjs       # 逐卡依赖、全局梯度与资源故障验收
 ├── verify-v7.cjs       # 梯度、数值缓存、权重字节与全流程验收
+├── verify-v8.cjs       # Tensor、Shell、模型一致性与服务预算验收
+├── progress.mjs        # 生成工程场景完成度清单
 ├── verify-transformer-reference.py # 可选的独立 NumPy 前向参考
 ├── verify.mjs          # 全部验收入口
 ├── docs/               # 操作规格与验收路径

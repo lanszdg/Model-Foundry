@@ -41,7 +41,7 @@ class World{
   this.need(c.learning_rate>0&&c.learning_rate<=.1,'learning_rate 范围 (0, 0.1]');
   this.need(!c.optimizer_offload||['none','cpu'].includes(c.optimizer_offload),'optimizer_offload 必须为 none 或 cpu');
   const info=this.configInfo(c);this.need(Number.isInteger(info.dp)&&info.dp>=1,'TP × PP × CP 必须整除 world_size='+info.gpus);
-  this.need(64%c.tensor_parallel===0,'attention_heads=64 必须能被 TP 整除');this.need(80%c.pipeline_parallel===0,'layers=80 必须能被 PP 整除');
+  const target=globalThis.FoundryCore.ModelSpec?globalThis.FoundryCore.ModelSpec.resolve(this).target:{num_attention_heads:64,num_hidden_layers:80};this.need(target.num_attention_heads%c.tensor_parallel===0,'attention_heads 必须能被 TP 整除');this.need(target.num_hidden_layers%c.pipeline_parallel===0,'layers 必须能被 PP 整除');
   this.need(Number.isInteger(info.accum)&&info.accum>=1,'global_batch 必须是 micro_batch × DP 的整数倍');return info;
  }
  action(type,arg={}){

@@ -1,4 +1,4 @@
-MODEL FOUNDRY v0.6.0
+MODEL FOUNDRY v0.8.0
 
 打开 index.html 即可运行（源码仓库也提供 dist/index.html）。HTML 内已包含全部样式、脚本和 3D 场景，无外部依赖。
 
@@ -57,3 +57,11 @@ v0.7 Transformer 数值工程
 训练页 → Transformer 内核：选择 Layer / Q Head，刷新真实注意力与梯度；完整检查点可下载 .safetensors 权重。
 体验包内“工程存档/Transformer数值工程.json”为已建好环境并暂停的验收工程，导入后在训练页继续执行；也可从空机房自行建设。
 机房资源按虚拟 Atlas 70B 表达，浏览器数值分配独立记录。默认数值结构为 2 层/32 hidden，不表示在浏览器训练了真实 70B 权重。详细流程、格式与边界见 docs/Transformer数值内核与验收.md。
+
+
+v0.8 统一模型与操作语义
+模型入口为 /workspace/atlas/model-spec.json，旧 model.json 作为 numeric 兼容入口。目标结构、数值参考结构与当前运行的冻结快照分别保留。
+训练页 → 模型蓝图：选择 rank 检查每层张量、TP 区间、本地资源和不均匀检查点容量。
+终端支持引号、变量、退出码、管道与重定向，squeue/sacct 支持明确的筛选与格式参数。foundryctl capabilities 查看固定场景清单统计。
+体验包“工程存档/统一模型与终端工程.json”含已完成的 3 步训练和暂停时钟，可在 Code 修改配方重新检查提交。
+当前固定 100 项场景内闭环 49 项、部分 34 项、未实现 17 项；49% 不表示真实性或全部工程工作量。详见 docs/工程场景完成度清单.md 和 docs/统一模型与操作语义验收.md。
