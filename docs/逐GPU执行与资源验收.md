@@ -1,5 +1,7 @@
 # v0.6 · 逐 GPU 训练执行基准
 
+本文保留本版本的历史执行契约。v0.7 新任务改用 Transformer 数值内核与真实数值 KV；当前路径见 [Transformer 数值内核与验收](Transformer数值内核与验收.md)。旧存档按原协议继续执行。
+
 本轮将训练从“所有 Worker 共用阶段标签”改为按物理 GPU、micro batch 和通信依赖推进。协议为 `rank-events-v1`，新训练使用 `adam-v2` 与 `document-chunks-v2`；历史作业保留原执行协议。
 
 ## 固定工程对象与接口

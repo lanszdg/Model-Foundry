@@ -1,5 +1,17 @@
 # 更新记录
 
+## 0.7.0 · 可微分 Transformer 与数值 KV 服务
+
+新任务替换条件 Token 表，使用完整 decoder block 的数值计算：嵌入、RMSNorm、RoPE、因果 GQA、残差、SwiGLU、LM head 和稳定交叉熵。反向传播覆盖每类参数，Python loss 通过延迟 VJP 接入全局梯度累积与 AdamW。模型结构由 model.json 显式配置，与虚拟 70B 资源分开记录；后训练检查结构和 Tokenizer 一致性。
+
+预训练、assistant-only SFT 与 frozen-reference DPO 共用数值模型；DPO 使用稳定 logistic loss。激活重计算重建可微前向图。检查点持久化实际参数、矩与数据/RNG 状态；未完成步骤仍通过原有全局屏障决定提交。
+
+增加每层真实 K/V 张量与增量 Decode。Prefill 执行实际计算，同版本前缀缓存复用数值 KV；抢占清空数值缓存并按原 RNG 继续。转换产物增加真实 F64 safetensors 字节、结构与摘要，服务重新加载并校验这些权重。
+
+训练工作区增加层/头选择、真实注意力热图、命名张量与梯度统计、冻结检查结果及权重下载。终端支持 modelctl inspect。旧任务和存档保持原执行协议。
+
+新增每类张量中心差分、独立 NumPy 完整前向参考、因果/填充遮罩、长前缀影响、RoPE、增量等价、学习效果、DPO 梯度、重计算等价、状态恢复、矩阵轴与 safetensors 字节、转换与数值缓存检查。详见 [Transformer 内核验收](docs/Transformer数值内核与验收.md)。
+
 ## 0.6.0 · 逐 GPU 训练与资源执行
 
 新增 rank-events-v1。每张 GPU 对应独立 rank，按 TP/CP/DP/PP 映射物理分配；micro batch 按非交错 1F1B 执行。Forward、RecomputeForward、Backward、TP/CP/P2P、ReduceScatter、全局 norm、Adam 和 AllGather 具有可追溯的依赖、工作量和时间。

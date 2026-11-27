@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.6.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.7.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -86,6 +86,27 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
 
+## v0.7 · 模型内部，也成为可以操作的现场
+
+![可训练与可检查的 Transformer 计算闭环](assets/transformer-engine.svg)
+
+**看见一次参数更新从哪里来，知道下一枚 Token 为什么发生变化。**
+
+新任务使用带完整前向与反向路径的 decoder-only Transformer：RMSNorm、RoPE、因果 GQA、SwiGLU、残差、LM head 与交叉熵。语料、loss mask、学习率和后训练目标，会改变实际张量与梯度。
+
+| 你能亲手检查 | 对应的执行证据 |
+| :--- | :--- |
+| 选择一层、一个 Query Head | 查看真实注意力概率、因果遮罩和语料 Token |
+| 改变脚本中的损失 | 梯度经过全层反向传播，影响一次完整 AdamW 更新 |
+| 比较预训练、SFT 与 DPO | 使用相同模型结构、父检查点和冻结 reference policy |
+| 在训练中保存、刷新、恢复 | 参数、Adam moments、RNG 与数据游标保持一致 |
+| 下载与重载模型权重 | 实际 safetensors 字节、矩阵轴映射与摘要校验 |
+| 重复发送相同前缀 | 复用每层真实 K/V 张量，减少实际前向 Token 工作 |
+
+训练页新增 **Transformer 内核**，将工程资源视图与数值检查放进同一个工作区。运行仍由单文件 HTML 承载，无需安装 GPU 驱动或下载外部计算运行时。
+
+虚拟 Atlas 70B 负责完整机房、资源和分布式工程场景；浏览器数值结构采用显式执行预算，默认 2 层、32 hidden、4 Q heads、1 KV head，覆盖完整计算结构。这不会产生具有真实 70B 规模与能力的参数。实现、独立数值参考和可复现路径见 [Transformer 数值内核与验收](docs/Transformer数值内核与验收.md)。
+
 ## v0.6 · 走到每一张 GPU
 
 ![从 micro batch 到全局参数提交](assets/rank-execution.svg)
@@ -106,7 +127,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 训练页提供暂停/逐事件推进、逐卡状态、流水线时间线、通信组、损失曲线、实验扫描、检查点分片与冻结源码。内置 Worker 执行数值工作，页面仍可操作；全部代码随单文件 HTML 交付。
 
-操作、资源假设和可复现路径见 [逐 GPU 执行与资源验收](docs/逐GPU执行与资源验收.md)。rank 级工程机制与完整 Transformer/CUDA 实现的边界分别记录，不使用检查数量表示复刻完成率。
+操作、资源假设和可复现路径见 [逐 GPU 执行与资源验收](docs/逐GPU执行与资源验收.md)。rank 级工程机制、浏览器数值分配与 CUDA 实现的边界分别记录，不使用检查数量表示复刻完成率。
 
 ## v0.5 · 从“显示输出”，走向逐步执行
 
@@ -121,7 +142,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **参数经得起检查**：新训练按配方学习率与调度更新，去掉阶段隐藏倍率；未实现的框架调用报告源码错误。
 - **历史经得起追溯**：旧报告保留并要求重新评测；已加载的模型继续服务，新发布按当前协议验收。
 
-操作契约、独立数值例子与验收路径见 [真实性基准与执行验收](docs/真实性基准与执行验收.md)。这些改进提升执行机制的一致性，不代表已完成 Transformer 与真实 GPU 性能的完整复刻。
+操作契约、独立数值例子与验收路径见 [真实性基准与执行验收](docs/真实性基准与执行验收.md)。这些改进提升执行机制的一致性，新内核与历史执行协议分别验收，真实 GPU 性能仍需独立标定。
 
 ## v0.4 · 从配置界面，走向可执行的工程闭环
 
@@ -171,7 +192,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 | 系统建设 | 逐节点配置 netplan、校验地址和 DNS、安装运行时、编辑服务配置、启动守护进程、挂载共享存储、查看节点日志 |
 | 数据工程 | 导入 JSONL、编辑记录、运行清洗 DAG、逐条检查精确/近似去重、污染与隐私处理，隔离文档簇，检查 BPE、标签、loss mask 和 Packing |
 | 开发与训练 | 执行项目 Python 模块和前向函数、查看行级错误、提交多作业与参数扫描、比较损失/资源/成本 |
-| 模型状态 | 逐 Token 损失与梯度、Adam 状态、assistant-only SFT、reference-policy DPO；检查点恢复对应代码与训练状态 |
+| 模型状态 | 完整 decoder-only Transformer 前向/反向、AdamW、assistant-only SFT、reference-policy DPO；检查点恢复数值参数与训练状态 |
 | 评测与推理 | 固定检查点逐样本评测、带 I/O 和校验的分片转换、逐请求排队/缓存/生成、扩缩容、灰度、回滚与副本恢复 |
 | 诊断与恢复 | 物理断网、错误 DNS、错误服务配置、存储中断、节点失联、显存不足与学习率异常的定位和恢复 |
 
@@ -209,7 +230,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.6.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.7.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -227,6 +248,9 @@ Model-Foundry/
 │   ├── runtime.js      # 进程、配置快照、资源调度与分片提交
 │   ├── python.js       # AST、项目模块与源文件错误定位
 │   ├── corpus.js       # 数据治理、版本、Tokenizer 与 Packing
+│   ├── transformer.js # RMSNorm / RoPE / GQA / SwiGLU 与反向传播
+│   ├── transformer-decoder.js # 每层数值 KV 与增量解码
+│   ├── transformer-tools.js # 张量检查与 safetensors 资产
 │   ├── learning.js     # 前向执行、梯度、后训练与评测
 │   ├── accumulation.js # 整批采样、Token 加权梯度与全局更新
 │   ├── distributed.js  # 物理 rank、1F1B、通信与资源争用
@@ -252,6 +276,8 @@ Model-Foundry/
 ├── verify-v4-boundaries.cjs # 故障与 KV 不变量
 ├── verify-v5.cjs       # 独立计分、单步采样与暂停恢复验收
 ├── verify-v6.cjs       # 逐卡依赖、全局梯度与资源故障验收
+├── verify-v7.cjs       # 梯度、数值缓存、权重字节与全流程验收
+├── verify-transformer-reference.py # 可选的独立 NumPy 前向参考
 ├── verify.mjs          # 全部验收入口
 ├── docs/               # 操作规格与验收路径
 ├── CHANGELOG.md

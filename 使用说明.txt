@@ -50,3 +50,10 @@ v0.6 逐 GPU 执行
 选中 rank 可限制其算力或定位机柜；断开物理 IB 后需修复连接，再从完整检查点恢复。
 硬件配置位于 /etc/foundry/hardware.json，排空资源后应用。完整规则与假设见 docs/逐GPU执行与资源验收.md。
 体验包“工程存档/逐GPU执行.json”可直接导入，继续后观察正在运行的 Atlas 70B 作业。
+
+
+v0.7 Transformer 数值工程
+新训练使用可微分的 Transformer。模型结构在 /workspace/atlas/model.json 中设置；提交前重新检查。后训练沿用父模型的结构和 Tokenizer。
+训练页 → Transformer 内核：选择 Layer / Q Head，刷新真实注意力与梯度；完整检查点可下载 .safetensors 权重。
+体验包内“工程存档/Transformer数值工程.json”为已建好环境并暂停的验收工程，导入后在训练页继续执行；也可从空机房自行建设。
+机房资源按虚拟 Atlas 70B 表达，浏览器数值分配独立记录。默认数值结构为 2 层/32 hidden，不表示在浏览器训练了真实 70B 权重。详细流程、格式与边界见 docs/Transformer数值内核与验收.md。

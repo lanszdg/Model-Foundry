@@ -16,9 +16,9 @@ labctl install storage
 systemctl start storage
 mount storage-01:/data /data</pre><h3>故障恢复</h3><p>训练中断后，先修复节点、网络或存储，再从完整检查点恢复。显存不足要修改训练配方；过高学习率可能导致训练发散。</p></div></div><div class="manual-note">当前版本支持逐节点认证与注册、GPU 分配、分片检查点与恢复，以及 70B Dense 的预训练、SFT、DPO 与服务交付。工程配置、日志、指标、文件和产物共享同一份世界状态。</div></div></section>
 <div id="toast" role="status"></div><div id="confirmModal" class="confirm-modal" hidden><div><h3>重新开始工程？</h3><p>当前本地进度将被替换。建议先导出工程存档。</p><button id="cancelReset" class="btn">保留当前工程</button><button id="confirmReset" class="btn danger">重新开始</button></div></div><input id="importFile" type="file" accept="application/json,.json" hidden><input id="corpusFile" type="file" accept=".jsonl,.json,.txt" hidden>
-<script>/* ENGINE */</script><script>/* SYSTEMS */</script><script>/* RUNTIME */</script><script>/* PYTHON */</script><script>/* CORPUS */</script><script>/* LEARNING */</script><script>/* ACCUMULATION */</script>
-<script>/* DECODER */</script>
-<script>/* SERVING */</script><script>/* ARTIFACTS */</script><script>/* DISTRIBUTED */</script>
+<script>/* ENGINE */</script><script>/* SYSTEMS */</script><script>/* RUNTIME */</script><script>/* PYTHON */</script><script>/* CORPUS */</script><script>/* TRANSFORMER */</script><script>/* LEARNING */</script><script>/* ACCUMULATION */</script>
+<script>/* DECODER */</script><script>/* TRANSFORMER_DECODER */</script>
+<script>/* SERVING */</script><script>/* ARTIFACTS */</script><script>/* DISTRIBUTED */</script><script>/* TRANSFORMER_TOOLS */</script>
 <script type="text/plain" id="trainingWorkerSource">/* TRAINING_WORKER */</script>
 <script>/* SCENE */</script><script>/* STORAGE */</script><script>(async()=>{await FoundryStorage.open();
 /* APP */
