@@ -1,6 +1,6 @@
 {
   "name": "model-foundry",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "A local-first, first-person large-model engineering world in one HTML file.",
   "scripts": {

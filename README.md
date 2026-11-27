@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.5.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.6.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -85,6 +85,28 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **工程导出与导入**：保存多个工程分支，便于复盘和比较。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
+
+## v0.6 · 走到每一张 GPU
+
+![从 micro batch 到全局参数提交](assets/rank-execution.svg)
+
+**能提交一个训练任务，还应该能回答：哪张卡在计算，哪张卡在等待，等待的是哪个依赖。**
+
+本版将每张 GPU 绑定到物理节点与卡号，按 TP/CP/DP/PP 生成通信组，以非交错 1F1B 推进 micro batch。整批梯度、全局 norm、Adam 和参数同步全部完成后，模型与数据游标才更新一次。
+
+| 你的操作 | 可以检查的工程后果 |
+| :--- | :--- |
+| 改变并行布局 | rank 坐标、流水线切分、通信参与者和资源占用随之变化 |
+| 限制一张卡的算力 | 同组快卡等待，整步耗时增加；数据和数值更新保持可复现 |
+| 开启 activation recompute | 时间线增加重计算，保留激活减少，显存与计算形成取舍 |
+| 启用 CPU optimizer offload | 增加主机内存、PCIe D2H、CPU Adam 和 H2D 工作 |
+| 让多个作业共享网络 | 相同 HCA、Spine 与存储预算产生争用 |
+| 拔出跨节点 IB 链路 | 相关通信阻塞，watchdog 给出具体 rank 与端点；未完成步骤不提交 |
+| 在 backward 中刷新工程 | 重建未提交步骤的数值工作，保持参数、Adam、RNG 与数据游标一致 |
+
+训练页提供暂停/逐事件推进、逐卡状态、流水线时间线、通信组、损失曲线、实验扫描、检查点分片与冻结源码。内置 Worker 执行数值工作，页面仍可操作；全部代码随单文件 HTML 交付。
+
+操作、资源假设和可复现路径见 [逐 GPU 执行与资源验收](docs/逐GPU执行与资源验收.md)。rank 级工程机制与完整 Transformer/CUDA 实现的边界分别记录，不使用检查数量表示复刻完成率。
 
 ## v0.5 · 从“显示输出”，走向逐步执行
 
@@ -187,7 +209,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.5.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.6.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -206,6 +228,10 @@ Model-Foundry/
 │   ├── python.js       # AST、项目模块与源文件错误定位
 │   ├── corpus.js       # 数据治理、版本、Tokenizer 与 Packing
 │   ├── learning.js     # 前向执行、梯度、后训练与评测
+│   ├── accumulation.js # 整批采样、Token 加权梯度与全局更新
+│   ├── distributed.js  # 物理 rank、1F1B、通信与资源争用
+│   ├── distributed-ui.js # 逐卡、时间线、实验和检查点工作区
+│   ├── training-worker.js # 内置数值 Worker 协议
 │   ├── decoder.js      # 可持久化的单步采样与停止控制
 │   ├── serving.js      # 请求调度、KV、灰度与副本恢复
 │   ├── artifacts.js    # 转换 I/O、分片校验与资产登记
@@ -225,6 +251,7 @@ Model-Foundry/
 ├── verify-v4.cjs       # 数据/脚本/训练/服务全链验证
 ├── verify-v4-boundaries.cjs # 故障与 KV 不变量
 ├── verify-v5.cjs       # 独立计分、单步采样与暂停恢复验收
+├── verify-v6.cjs       # 逐卡依赖、全局梯度与资源故障验收
 ├── verify.mjs          # 全部验收入口
 ├── docs/               # 操作规格与验收路径
 ├── CHANGELOG.md
