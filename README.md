@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.9.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.10.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -85,6 +85,25 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 - **工程导出与导入**：保存多个工程分支，便于复盘和比较。
 - **统一工程时钟**：通过时间倍率观察长流程；关闭页面后冻结工程时间。
 - **配置与运行血缘**：将代码、数据、训练、评测和模型版本联系起来。
+
+## v0.10 · 让模型结构进入计算，让源码操作产生结果
+
+![原生算子与源码调试工作流](assets/native-studio.svg)
+
+**同一条工程链，既能追到一个专家接收了哪些 Token，也能停在一行代码前，看清变量为什么变成这个值。**
+
+本版深化两条已有模型路线：GLM-5.3 接入压缩 KV、稀疏索引选择与专家路由；Qwen3.8 接入循环 DeltaNet、门控注意力和可训练视觉编码。调整结构、数据和训练配方后，前向输出、梯度、权重及后续服务会随计算改变。
+
+| 你可以亲手做的事 | 可以看到的依据 |
+| :--- | :--- |
+| 修改项目 architecture.json | 层数、张量形状、参数分配及后续阶段的结构校验 |
+| 用图文样本训练 Qwen 路线 | RGB 图像变为视觉前缀，语言损失反传到视觉参数 |
+| 检查 GLM 路线的路由 | 每层因果 Token 选择、专家分配和实际负载 |
+| 对比两次实验 | 实测 loss、数据与源码摘要、变化参数数量与 L2 距离 |
+| 在 Code 中停住程序 | 行断点、F10 越过、F11 进入函数、局部变量与 Watch |
+| 跨文件查找并修改配置 | 跳转到源文件行号、保存、语法检查与实际错误回溯 |
+
+新增 404 项检查；两条数值路径另经独立 NumPy 前向核对。它们是明确限定尺寸的架构实现，尚不包含官方完整规模权重、全部算子和原生软件兼容性。具体算子、操作步骤、独立误差与剩余范围见 [原生算子与源码调试验收](docs/原生算子与源码调试验收.md)。
 
 ## v0.9 · 从一个模型，扩展到多种工程世界
 
@@ -271,7 +290,7 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.9.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.10.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
@@ -297,6 +316,9 @@ Model-Foundry/
 │   ├── terminal.js    # Shell 数据流、退出码与严格查询参数
 │   ├── model-contract.js # 任务、转换、服务资产与容量契约
 │   ├── acceptance.js  # 固定 100 项场景与完成度口径
+│   ├── native-decoder.js # MLA/DSA/MoE、DeltaNet 与视觉前缀
+│   ├── debugger.js    # 冻结源码、语句断点、单步与 Watch
+│   ├── studio.js      # 文件、搜索、编辑与源码调试工作区
 │   ├── transformer.js # RMSNorm / RoPE / GQA / SwiGLU 与反向传播
 │   ├── transformer-decoder.js # 每层数值 KV 与增量解码
 │   ├── transformer-tools.js # 张量检查与 safetensors 资产
