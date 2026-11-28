@@ -1,0 +1,57 @@
+{
+  "version": "0.17.0",
+  "independentCases": 6,
+  "checks": 3697,
+  "routes": [
+    {
+      "model": "glm-5.3",
+      "stages": [
+        "data",
+        "pretrain",
+        "sft",
+        "dpo",
+        "evaluate",
+        "export",
+        "deploy"
+      ],
+      "status": "COMPLETED"
+    },
+    {
+      "model": "qwen3.8-27b",
+      "stages": [
+        "data",
+        "align",
+        "sft",
+        "evaluate",
+        "export",
+        "deploy"
+      ],
+      "status": "COMPLETED"
+    },
+    {
+      "model": "deepseek-v4.1-flash-1017",
+      "stages": [
+        "data",
+        "pretrain",
+        "sft",
+        "dpo",
+        "evaluate",
+        "export",
+        "deploy"
+      ],
+      "status": "COMPLETED"
+    },
+    {
+      "model": "vjepa-2.1",
+      "stages": [
+        "data",
+        "pretrain",
+        "cooldown",
+        "evaluate",
+        "export",
+        "deploy"
+      ],
+      "status": "COMPLETED"
+    }
+  ]
+}

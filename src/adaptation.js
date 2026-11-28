@@ -10,7 +10,7 @@ function quantize(values,shape,bits=4){
 }
 function dequantize(q){if(!q||![4,8].includes(q.bits)||q.length!==q.shape.reduce((a,b)=>a*b,1)||q.bytes.length!==Math.ceil(q.length*q.bits/8)||q.scales.length!==q.length/q.shape.at(-1))throw Error('Corrupt quantized tensor');const width=q.shape.at(-1),limit=2**(q.bits-1)-1;return Array.from({length:q.length},(_,i)=>{const code=q.bits===8?q.bytes[i]:(q.bytes[Math.floor(i/2)]>>(i%2*4))&15;if(code>limit*2||!Number.isFinite(q.scales[Math.floor(i/width)])||q.scales[Math.floor(i/width)]<=0)throw Error('Invalid quantization code / scale');return(code-limit)*q.scales[Math.floor(i/width)];});}
 function attach(model,options={}){
- const rank=options.rank??2,alpha=options.alpha??rank,method=options.method||'lora',targets=options.targets||['q_proj','v_proj','q_b_proj','kv_b_proj','in_proj_qkv'];
+ const rank=options.rank??2,alpha=options.alpha??rank,method=options.method||'lora',targets=options.targets||['q_proj','v_proj','q_b_proj','kv_b_proj','in_proj_qkv','wq_a','wq_b','wkv','wo_b'];
  if(model.adapter)throw Error('Adapter already attached');if(!['lora','qlora'].includes(method)||!Number.isInteger(rank)||rank<1||rank>8||!Number.isFinite(alpha)||alpha<=0)throw Error('Invalid adapter configuration');
  const tensors=T.layout(model.architecture).filter(p=>p.trainable!==false&&p.shape.length===2&&targets.some(t=>p.name.includes(t))&&!p.name.includes('embed'));
  if(!tensors.length)throw Error('No adapter target matrices matched');const adapter={version:'adapter-v1',method,rank,alpha,baseDigest:C.hash(JSON.stringify(model.parameters)),step:0,tensors:[],baseQuantization:[]};

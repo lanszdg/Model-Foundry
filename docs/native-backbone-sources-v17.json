@@ -1,0 +1,110 @@
+{
+  "checkedAt": "2026-11-28",
+  "sources": [
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/convert.py",
+      "sha256": "035028340479145594a81d6084a8424e57363adf83c0d5983914783d95614d76",
+      "bytes": 9458
+    },
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/engram.py",
+      "sha256": "11f35ecbead8150c35aa002b3d180ef290b05a25afe883a11884f94d476d3897",
+      "bytes": 8138
+    },
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/generate.py",
+      "sha256": "8668d67f7d108e32b90d50cb0d8606889ceb2219bfe95741d84e22f70768e9f0",
+      "bytes": 8722
+    },
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/image_processor.py",
+      "sha256": "482759e3bcc4e9bb5ee582b244cc563f5d0e163d8b48dda91ebb7106e62f9272",
+      "bytes": 7699
+    },
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/kernel.py",
+      "sha256": "1236c3507019ed176f5dba5e04bcea58867cf654818c6cf138ed4845398c2455",
+      "bytes": 23790
+    },
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/model.py",
+      "sha256": "e5decd76fe70fd56ef2f10124d245c6f64fb6a0003cc9068a1d3182a168b8d2d",
+      "bytes": 61669
+    },
+    {
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/inference/vision.py",
+      "sha256": "5d49edc196a4ef22384abe76d35a40098cbe1e74b586c8f66a2edff4f076b26c",
+      "bytes": 4457
+    },
+    {
+      "source": "https://raw.githubusercontent.com/huggingface/transformers/fc1adcd98cb4fb95c0939c3e2123a673982f9e0e/src/transformers/models/glm_moe_dsa/modeling_glm_moe_dsa.py",
+      "sha256": "c31c4b58a18376d6eab9404e231c762f67c900e11f5a7a4b801902d49e191fe9",
+      "bytes": 36852
+    },
+    {
+      "source": "https://raw.githubusercontent.com/huggingface/transformers/fc1adcd98cb4fb95c0939c3e2123a673982f9e0e/src/transformers/models/qwen3_5/modeling_qwen3_5.py",
+      "sha256": "ee40a84b7b02ec6437a85e88c193105872adf4edfdc6058a92372033625a524b",
+      "bytes": 91637
+    },
+    {
+      "source": "https://raw.githubusercontent.com/huggingface/transformers/fc1adcd98cb4fb95c0939c3e2123a673982f9e0e/src/transformers/models/qwen3_vl/modeling_qwen3_vl.py",
+      "sha256": "92b161f955b0ac7aebd4ddf2226dec6bdab905f84ffa2254ce43393d75c3e24f",
+      "bytes": 63839
+    },
+    {
+      "source": "https://raw.githubusercontent.com/facebookresearch/vjepa2/204698b45b3712590f06245fbfba32d3be539812/app/vjepa_2_1/models/predictor.py",
+      "sha256": "30111720eb90c6dcdde44521cea53cc736020f984e5573150fd3dc7b4acc05d8",
+      "bytes": 10679
+    },
+    {
+      "source": "https://raw.githubusercontent.com/facebookresearch/vjepa2/204698b45b3712590f06245fbfba32d3be539812/app/vjepa_2_1/models/vision_transformer.py",
+      "sha256": "d2932eabeba684d8f558302a13cfd4be70a0170ee5112f5a794652d0a29089b9",
+      "bytes": 18195
+    },
+    {
+      "source": "https://raw.githubusercontent.com/facebookresearch/vjepa2/204698b45b3712590f06245fbfba32d3be539812/app/vjepa_2_1/models/utils/modules.py",
+      "sha256": "64be6a87bd9f18d385f4e44186db3347d1665e18a1f0511d51d3b305531562e2",
+      "bytes": 16963
+    },
+    {
+      "source": "https://raw.githubusercontent.com/facebookresearch/vjepa2/204698b45b3712590f06245fbfba32d3be539812/app/vjepa_2_1/models/utils/patch_embed.py",
+      "sha256": "29e11ab97ab3ccdef107d6a7d0d7b374b58e712076cc3561f07b7e603c9b5165",
+      "bytes": 1883
+    },
+    {
+      "source": "https://raw.githubusercontent.com/facebookresearch/vjepa2/204698b45b3712590f06245fbfba32d3be539812/src/hub/backbones.py",
+      "sha256": "391cdde1e9a1da47cb8094bbea5fbbe8acac0135b27e82f1a6ab19c0b39cc692",
+      "bytes": 10164
+    },
+    {
+      "source": "https://raw.githubusercontent.com/sgl-project/sglang/b38abf4280b4991d9b794bda0897b7f30229e357/python/sglang/srt/models/deepseek_nextn.py",
+      "sha256": "22bf7d28a8adb8955f74868ba38115f3107225a4005381be87d8716f24edbd1e",
+      "bytes": 15767
+    },
+    {
+      "source": "https://raw.githubusercontent.com/sgl-project/sglang/b38abf4280b4991d9b794bda0897b7f30229e357/python/sglang/srt/models/deepseek_v2.py",
+      "sha256": "76658924e11395275ec47d42c081f696283bc6bb668842544e098bbda464f059",
+      "bytes": 156076
+    },
+    {
+      "source": "https://raw.githubusercontent.com/sgl-project/sglang/b38abf4280b4991d9b794bda0897b7f30229e357/python/sglang/srt/models/glm4_moe.py",
+      "sha256": "7c9f47bbdb608c7f1858a5a6c472fa54fdf18b99b94bc1a8cee98de1ec12605f",
+      "bytes": 56317
+    },
+    {
+      "source": "https://raw.githubusercontent.com/sgl-project/sglang/b38abf4280b4991d9b794bda0897b7f30229e357/python/sglang/srt/models/glm4_moe_nextn.py",
+      "sha256": "2fc8676fee6ef01a5fa1285804f7474f840b2da13e7cffc1a4c8fd77f6fd0178",
+      "bytes": 6073
+    },
+    {
+      "source": "https://raw.githubusercontent.com/sgl-project/sglang/b38abf4280b4991d9b794bda0897b7f30229e357/python/sglang/srt/models/qwen3_5_mtp.py",
+      "sha256": "b536ef66c6b0fcb263d89aa5c86bbfa2e3051725d4b089b471569133d2693969",
+      "bytes": 21893
+    },
+    {
+      "source": "https://raw.githubusercontent.com/huggingface/transformers/fc1adcd98cb4fb95c0939c3e2123a673982f9e0e/src/transformers/models/qwen3_vl/processing_qwen3_vl.py",
+      "sha256": "91e12b3712c8644df69655f8582b9b4581dea21d97005a15dacaa4a16163df1d",
+      "bytes": 9628
+    }
+  ]
+}
