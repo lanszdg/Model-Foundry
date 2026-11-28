@@ -12,5 +12,5 @@ document.addEventListener('submit',e=>{if(e.target.id==='studioSearchForm'){e.pr
 document.addEventListener('scroll',e=>{if(e.target.id==='codeEditor'&&$('studioGutter'))$('studioGutter').scrollTop=e.target.scrollTop;},true);
 document.addEventListener('keyup',e=>{if(e.target.id==='codeEditor'){const before=e.target.value.slice(0,e.target.selectionStart),parts=before.split('\n');$('studioCursor').textContent='Ln '+parts.length+', Col '+(parts.at(-1).length+1);}});
 document.addEventListener('keydown',e=>{if(U.active!=='code')return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();U.saveEditor();U.saveSoon();}if(e.key==='F10'){e.preventDefault();debug('over');}if(e.key==='F11'){e.preventDefault();debug('step');}if(e.key==='F5'){e.preventDefault();debug(E.state.debugger.session?.status==='PAUSED'?'continue':'start');}},true);
-document.querySelector('#welcome .build-tag').textContent='BUILD 11 / ENGINEERING SYSTEMS';
+document.querySelector('#welcome .build-tag').textContent='v0.12.1 / MODEL FOUNDRY';
 })();

@@ -69,7 +69,7 @@ function saveEditor(){if($('codeEditor')){clearTimeout(editingTimer);const text=
 function runAction(action,args={}){
  if(action==='returnWorld'){closeDesk();return;}if(action==='downloadProject'){download();return;}
  saveEditor();if(action==='clean')args.rules={...engine.state.data.rules};if(action==='loadtest')args.concurrency=Number($('concurrency')?.value||16);
- const r=engine.action(action,args);showToast(r.text,!r.ok);if(action==='submit'&&r.ok){active='jobs';}render(true);saveSoon();
+ const content=$('appContent'),scrollBefore=content.scrollTop,r=engine.action(action,args);window.dispatchEvent(new CustomEvent('foundry-action-result',{detail:{action,result:r,project:engine.state.modelLab?.selected}}));showToast(r.text,!r.ok);if(action==='submit'&&r.ok){active='jobs';}render(true);if(action.startsWith('model-lab-')&&action!=='model-lab-create')content.scrollTop=scrollBefore;saveSoon();
 }
 function preset(stage){saveEditor();let cfg=FoundryCore.DEFAULT_CONFIG;if(stage!=='pretrain')cfg=cfg.replace('stage: pretrain','stage: '+stage).replace('learning_rate: 0.00015','learning_rate: '+(stage==='sft'?'0.00002':'0.000005')).replace('warmup_steps: 100','warmup_steps: 30').replace('train_steps: 2000','train_steps: 600').replace('checkpoint_interval: 400','checkpoint_interval: 150');engine.action('savefile',{path:FoundryCore.CONFIG,content:cfg});editorFile=FoundryCore.CONFIG;render(true);showToast('已载入 '+stage.toUpperCase()+' 配方，检查后再提交');}
 function command(text){saveEditor();const r=engine.command(text);historyCursor=engine.state.history.length;if(!r.ok)showToast(r.text,true);if(r.openFile){editorFile=r.openFile;active='code';window.CampusUI?.openProgram('code');}render(true);saveSoon();}

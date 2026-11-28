@@ -1,4 +1,4 @@
-MODEL FOUNDRY v0.11.0
+MODEL FOUNDRY v0.12.1
 
 打开 index.html 即可运行（源码仓库也提供 dist/index.html）。HTML 内已包含全部样式、脚本和 3D 场景，无外部依赖。
 
@@ -92,3 +92,7 @@ MLflow运行页聚合Atlas与模型项目，支持 status = 'COMPLETED' and metr
 Grafana → Explore 执行 avg(DCGM_FI_DEV_GPU_UTIL)，Alerting创建阈值/待定/恢复保持规则。停监控exporter会进入NoData。
 API → HTTP / SSE inspector 对部署的原生文本/多模态模型或Atlas发送请求，可分块读取、停止读取触发背压、断连取消；内置终端也可curl提交并用apictl read STREAM_ID读取。
 工程存档/完整审查与工程机制.json 是已完成Qwen适配器训练与发布的暂停工程。审查的完整100项与剩余差距见 docs/完整工程审查与落地.md 和 docs/完整工程审查记录.json。
+
+
+v0.12.1 工位布局与操作
+电脑边框、应用留白与三栏宽度已重新分配。窗口标题栏的“↙”可恢复为适应工位的大小和位置；“□”仍可手动最大化。模型阶段显示前置条件，缺少设施时可从节点服务或终端继续建设。操作结果会保留在页面上。
