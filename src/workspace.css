@@ -195,3 +195,6 @@ body:has(.desktop.open) #touchMove { display: none; }
 .model-lab-shell select{background:#fff;color:#29414a;border:1px solid #d4dfe1;border-radius:5px;padding:8px 10px;max-width:100%;font:inherit}
 
 .rank-state-grid{max-height:260px;overflow:auto}.rank-state-grid thead{position:sticky;top:0;background:#fff;z-index:1}
+
+/* Batch decisions and their communication dependency remain visible together. */
+.model-batch-overview{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:stretch;margin-bottom:16px}.model-batch-overview>.card{margin-top:0}.model-batch-overview p{line-height:1.7}.model-batch-overview progress{accent-color:#6d9357}.model-batch-overview pre{max-height:180px;overflow:auto}@media(max-width:1050px){.model-batch-overview{grid-template-columns:minmax(0,1fr)}}

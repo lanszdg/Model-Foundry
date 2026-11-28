@@ -1,0 +1,60 @@
+{
+  "version": "0.15.0",
+  "checks": 332,
+  "labels": {
+    "lossDifference": 0.20726426074239512,
+    "gradientDifference": 40.41485991602279
+  },
+  "jepa": {
+    "teacherDifference": 0.9942544102668762,
+    "onlineDifference": 0
+  },
+  "network": {
+    "fast": 0.020005000000000002,
+    "slow": 0.080005,
+    "sameFast": 0.004449444444444444,
+    "sameSlow": 0.004449444444444444,
+    "contended": 0.040005,
+    "targetModel": {
+      "fast": 0.8292584227199999,
+      "slow": 3.3169886908799997
+    }
+  },
+  "routes": [
+    {
+      "id": "glm-5.3",
+      "stages": 6,
+      "status": "READY"
+    },
+    {
+      "id": "deepseek-v4.1-flash-1017",
+      "stages": 6,
+      "status": "READY"
+    },
+    {
+      "id": "qwen3.8-27b",
+      "stages": 5,
+      "status": "READY"
+    },
+    {
+      "id": "vjepa-2.1",
+      "stages": 5,
+      "status": "READY"
+    },
+    {
+      "id": "cosmos3-nano",
+      "stages": 4,
+      "status": "READY"
+    },
+    {
+      "id": "groot-n1.7",
+      "stages": 4,
+      "status": "READY"
+    },
+    {
+      "id": "vla-jepa",
+      "stages": 5,
+      "status": "READY"
+    }
+  ]
+}

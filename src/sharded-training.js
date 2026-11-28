@@ -4,8 +4,8 @@ const C=root.FoundryCore,T=C.Transformer,R=C.RankNumerics,protocol='rank-trainin
 const copy=x=>JSON.parse(JSON.stringify(x)),hash=x=>C.hash(JSON.stringify(x)),cache=new WeakMap();
 const model=j=>j.transformer||j.network;
 function vector(j){
- const m=model(j),adapter=m.adapter,layout=j.transformer?T.layout(m.architecture):C.DomainKernels.layout(m.family,m.config),values=[...m.parameters],descriptors=layout.map(p=>({...p,trainable:!adapter&&p.trainable!==false&&!(m.family==='joint-action-world'&&p.name.startsWith('encoder.')),decay:j.transformer?p.decay!==false:true}));
- if(adapter)for(let k=0;k<adapter.tensors.length;k++){const p=adapter.tensors[k];for(const key of ['A','B']){const shape=key==='A'?[p.shape[0],adapter.rank]:[adapter.rank,p.shape[1]];descriptors.push({name:p.name+'.lora_'+key,offset:values.length,length:p[key].length,shape,trainable:true,decay:true,adapterTensor:k,adapterKey:key});values.push(...p[key]);}}
+ const m=model(j),adapter=m.adapter,layout=j.transformer?T.layout(m.architecture):C.DomainKernels.layout(m.family,m.config),values=[...m.parameters],descriptors=layout.map(p=>({...p,trainable:!adapter&&(!C.ModelProtocol||C.ModelProtocol.trainable(j,p))&&p.trainable!==false&&!(m.family==='joint-action-world'&&p.name.startsWith('encoder.')),decay:j.transformer?p.decay!==false:true}));
+ if(adapter)for(let k=0;k<adapter.tensors.length;k++){const p=adapter.tensors[k];for(const key of ['A','B']){const shape=key==='A'?[p.shape[0],adapter.rank]:[adapter.rank,p.shape[1]];descriptors.push({name:p.name+'.lora_'+key,offset:values.length,length:p[key].length,shape,trainable:!C.ModelProtocol||C.ModelProtocol.trainable(j,{name:p.name}),decay:true,adapterTensor:k,adapterKey:key});values.push(...p[key]);}}
  return{values,descriptors,baseLength:m.parameters.length,adapter:!!adapter};
 }
 function rankId(q,dp,cp,pp,tp){return ((dp*q.cp+cp)*q.pp+pp)*q.tp+tp;}
