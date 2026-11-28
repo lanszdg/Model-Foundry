@@ -1,0 +1,79 @@
+{
+  "version": "0.14.0",
+  "date": "2026-11-28",
+  "stateProtocol": "rank-training-v1",
+  "newAssertions": 443,
+  "historicalAssertions": 2351,
+  "cumulativeAssertions": 2794,
+  "numericFixtureScope": "actual rank-owned numeric states, AD checkpoint replay, recovery and multi-model workflows; virtual admission ceilings raised for isolation",
+  "independentReferences": {
+    "transformer": "pass",
+    "glmMaxForwardError": 1.3322676295501878e-15,
+    "qwenMaxForwardError": 3.9968028886505635e-15,
+    "domainMaxLossError": 8.881784197001252e-16,
+    "variableHiddenFlowGradients": [
+      8,
+      32
+    ]
+  },
+  "browser": {
+    "model": "qwen3.8-27b",
+    "method": "lora",
+    "virtualAdmission": {
+      "gpus": 8,
+      "gpuGiB": 80,
+      "hostGiB": 1024
+    },
+    "parallel": {
+      "tp": 4,
+      "pp": 1,
+      "cp": 1,
+      "dp": 2
+    },
+    "sequenceLength": 32,
+    "globalBatch": 8,
+    "recipeEditedThroughUI": true,
+    "zero0": {
+      "rank0Weights": 9876,
+      "rank0Gradients": 112,
+      "rank0Master": 112
+    },
+    "zero3": {
+      "rank0Weights": 4938,
+      "rank0Gradients": 56,
+      "rank0Master": 56
+    },
+    "observedReplayedBlocks": 6,
+    "parameterStagingPeakElements": 5344,
+    "checkpointPendingSamples": 5,
+    "updatesObservedAfterRestore": 3,
+    "consoleErrors": 0,
+    "viewports": [
+      {
+        "width": 1366,
+        "height": 768,
+        "pageWidth": 1366
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "pageWidth": 390
+      }
+    ]
+  },
+  "retainedScope": [
+    "bounded numerical models and conservative reference TP ownership",
+    "complete official backbones and tokenizers",
+    "full script-defined training loops",
+    "native expert dispatch/combine",
+    "complete native software UI",
+    "hardware-profiler calibration",
+    "3D robot/sensor physics"
+  ],
+  "domainFlowRngWriteback": true,
+  "domainFlowRngRecovery": [
+    "groot-n1.7",
+    "vla-jepa",
+    "cosmos3-nano"
+  ]
+}

@@ -193,3 +193,5 @@ body:has(.desktop.open) #touchMove { display: none; }
 
 .batch-progress{width:100%;height:8px;accent-color:#678950}.model-lab-shell progress+ p{margin-top:16px}
 .model-lab-shell select{background:#fff;color:#29414a;border:1px solid #d4dfe1;border-radius:5px;padding:8px 10px;max-width:100%;font:inherit}
+
+.rank-state-grid{max-height:260px;overflow:auto}.rank-state-grid thead{position:sticky;top:0;background:#fff;z-index:1}
