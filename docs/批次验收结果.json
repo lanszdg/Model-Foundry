@@ -1,0 +1,50 @@
+{
+  "version": "0.13.0",
+  "date": "2026-11-28",
+  "protocol": "project-training-v2",
+  "newAssertions": 392,
+  "historicalAssertions": 1959,
+  "cumulativeAssertions": 2351,
+  "numericFixtureScope": "batch/sequence/DP/accumulation/checkpoint execution semantics; fixture resource ceilings raised for isolation",
+  "browserFixture": {
+    "isolation": "separate loopback origin; QA-only prepared project",
+    "model": "qwen3.8-27b",
+    "method": "lora",
+    "gpus": 8,
+    "gpuGiB": 80,
+    "hostGiB": 1024,
+    "microBatch": 2,
+    "gradientAccumulationSteps": 4,
+    "dp": 2,
+    "globalBatch": 16,
+    "sequenceLength": 32,
+    "verified": [
+      "partial accumulation visible",
+      "manual checkpoint",
+      "cancel",
+      "restore exact pending progress",
+      "resume execution",
+      "automatic live refresh",
+      "pause during calculation",
+      "desktop/mobile horizontal overflow absent"
+    ],
+    "viewports": [
+      [
+        1366,
+        768
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "consoleErrors": 0
+  },
+  "retainedGaps": [
+    "bounded numeric backbones, not complete official kernels",
+    "official long context execution",
+    "complete EP/ZeRO numeric ownership",
+    "native software complete UI",
+    "hardware-profiler calibration"
+  ]
+}
