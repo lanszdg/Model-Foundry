@@ -2,7 +2,7 @@
 (function(root){'use strict';const C=root.FoundryCore,copy=x=>JSON.parse(JSON.stringify(x));
 const digest=x=>C.hash(JSON.stringify(x));
 function numericModel(j){return j.transformer||j.network;}
-function optimizerBinding(j){const model=numericModel(j);return{model:digest(model?.architecture||model?.config),...(C.ModelProtocol?{trainablePolicy:model?.stagePolicy||null}:{}),dtype:j.transformer?.execution?.dtype||j.recipe.dtype,method:j.transformer?.adapter?.method||j.recipe.method||'full',parameters:digest(model?.parameters||model?.weights),adapter:j.transformer?.adapter?digest(j.transformer.adapter.tensors.map(p=>({name:p.name,A:p.A,B:p.B}))):null};}
+function optimizerBinding(j){const model=numericModel(j);return{model:digest(model?.architecture||model?.config),...(C.ModelProtocol?{trainablePolicy:model?.stagePolicy||null,...(model?.vocabulary?{vocabularyDigest:model.vocabulary.digest}:{})}:{}),dtype:j.transformer?.execution?.dtype||j.recipe.dtype,method:j.transformer?.adapter?.method||j.recipe.method||'full',parameters:digest(model?.parameters||model?.weights),adapter:j.transformer?.adapter?digest(j.transformer.adapter.tensors.map(p=>({name:p.name,A:p.A,B:p.B}))):null};}
 function prepare(j,parent){if(!numericModel(j))throw Error('Numerical checkpoint missing');const policy=j.recipe.optimizerPolicy||'reset';if(!['reset','continue'].includes(policy))throw Error('optimizerPolicy must be reset or continue');const current=optimizerBinding(j),previous=parent.optimizerBinding;
  if(policy==='continue'){
   if(!previous||JSON.stringify(previous)!==JSON.stringify(current))throw Error('Optimizer continuation rejected: weights, architecture, precision or adaptation changed');

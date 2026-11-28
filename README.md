@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/HTML-单文件交付-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Runtime](https://img.shields.io/badge/Runtime-零外部依赖-c3ec92?style=flat-square&labelColor=14272b)](#快速开始)
 [![Storage](https://img.shields.io/badge/Storage-本地存档-c3ec92?style=flat-square&labelColor=14272b)](#你的工程会留下来)
-[![Version](https://img.shields.io/badge/Version-v0.15.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
+[![Version](https://img.shields.io/badge/Version-v0.16.0-d8bc7c?style=flat-square&labelColor=14272b)](#项目状态)
 
 [项目价值](#让工程实践从算力门槛中释放出来) · [体验设计](#你是一名工程师进入现场开始工作) · [快速开始](#快速开始) · [工程结构](#工程结构) · [项目状态](#项目状态)
 
@@ -34,6 +34,22 @@
 | 经历失败与恢复 | 通过日志、文件、节点和服务状态定位问题 |
 | 理解工程因果 | 让参数、资源、数据、训练和服务表现相互关联 |
 | 降低环境门槛 | 用单个 HTML 承载可本地运行的工程世界 |
+
+## 把原生工具，接进同一个工程世界
+
+![原生分词、监督、执行与观测](assets/native-workbench.svg)
+
+**亲手操作的价值，在于每个工具都接着同一份数据、同一次训练和同一个模型版本。**
+
+v0.16 接入七个原生 Tokenizer / 分支入口，保留完整词表、官方聊天模板、固定版本与来源摘要。输入可以展开成真实 Token ID 和监督 Mask；同一条序列继续进入训练、评测、检查点和服务。语言、多模态、世界模型与具身策略各走自己的数据和训练阶段。
+
+![原生 Token ID 与回答监督工作台](assets/tokenizer-native-v16.jpg)
+
+![工位内运行的原版 MLflow 3.0.1](assets/mlflow-native-v16.jpg)
+
+工位内现在运行 **MLflow 3.0.1 原版前端**。创建实验、查看曲线、打开训练配置、登记模型和修改描述，都连接工程内的追踪服务与本地存档。系统建设、开发、训练与观测开始共享可操作的软件现场。
+
+本版新增 **730 项验收断言**，其中 560 项直接对照官方 Rust 分词器与 Python 模板渲染结果。七类路线完成端到端验收；完整来源、操作、可微网络词表投影和软件覆盖范围见 [原生分词与软件界面验收](docs/原生分词与软件界面验收.md)。
 
 ## 把配置，变成可追溯的工程后果
 
@@ -358,11 +374,11 @@ Model Foundry 的核心是同一份持续存在的工程状态。
 
 ## 项目状态
 
-当前发布版本为 **v0.15.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
+当前发布版本为 **v0.16.0**。当前覆盖设备与系统建设、数据治理、可执行脚本、预训练、SFT、DPO、实验比较、逐样本评测、产物转换和服务发布的可操作闭环。具体变更与验证范围见 [更新记录](CHANGELOG.md)。
 
 **工程仿真是项目定位；对全部真实软件和场景的 1∶1 覆盖是持续建设目标。** 当前版本不等同于完整 Linux、Python 或 CUDA 运行环境，也不会产生真正的 70B 模型权重。各版本的可用操作与验证范围以更新记录为准。
 
-封面、流程图和执行架构图是项目原创示意图，用于说明体验与架构。
+封面、流程图和执行架构图是项目原创示意图；MLflow 图片为工位运行截图。第三方软件版本、来源与许可证见 [组件声明](third-party/NOTICE.md)。
 
 ## 工程结构
 
@@ -377,6 +393,11 @@ Model-Foundry/
 │   ├── python.js       # AST、项目模块与源文件错误定位
 │   ├── corpus.js       # 数据治理、版本、Tokenizer 与 Packing
 │   ├── model-catalog.js # 最新可获取模型、官方来源和领域阶段
+│   ├── native-tokenizer.js # 原生词表、模板与监督序列
+│   ├── native-project.js # 原生 ID、数值投影与工程绑定
+│   ├── native-mlflow-ui.js # 原版前端与工程服务桥接
+│   ├── tracking-native-api.js # 实验/指标/资产/注册持久化接口
+│   ├── native-graphql.js # 原始 MLflow GraphQL schema 与查询
 │   ├── model-lab.js    # 分领域项目、共享资源、训练与策略服务
 │   ├── sharded-training.js # Rank 状态所有权、分片更新与参数暂存
 │   ├── project-training.js # 冻结批次、数据采样、梯度屏障与检查点

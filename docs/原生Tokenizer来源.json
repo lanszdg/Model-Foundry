@@ -1,0 +1,393 @@
+[
+  {
+    "id": "glm-5.3",
+    "repository": "zai-org/GLM-5.3",
+    "revision": "ba32f8c19c8738e2c57c71798c601d477a7bf844",
+    "files": [
+      {
+        "path": "chat_template.jinja",
+        "bytes": 10614,
+        "sha256": "0e2b6268ac54f04d2bc1157e8cfb896cb66f25c0b5e319ea12e56014c3914f24",
+        "source": "https://huggingface.co/zai-org/GLM-5.3/resolve/ba32f8c19c8738e2c57c71798c601d477a7bf844/chat_template.jinja"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 20217442,
+        "sha256": "19e773648cb4e65de8660ea6365e10acca112d42a854923df93db4a6f333a82d",
+        "source": "https://huggingface.co/zai-org/GLM-5.3/resolve/ba32f8c19c8738e2c57c71798c601d477a7bf844/tokenizer.json",
+        "modelType": "BPE",
+        "vocab": 154820,
+        "merges": 321649,
+        "normalizer": null,
+        "preTokenizer": {
+          "type": "Sequence",
+          "pretokenizers": [
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "ByteLevel",
+              "add_prefix_space": false,
+              "trim_offsets": true,
+              "use_regex": false
+            }
+          ]
+        },
+        "decoder": {
+          "type": "ByteLevel",
+          "add_prefix_space": true,
+          "trim_offsets": true,
+          "use_regex": true
+        }
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 761,
+        "sha256": "98b1271574f41abf89427ae2dda030d94dc9478f0edc5a8bd240db213c6fd5fc",
+        "source": "https://huggingface.co/zai-org/GLM-5.3/resolve/ba32f8c19c8738e2c57c71798c601d477a7bf844/tokenizer_config.json"
+      }
+    ]
+  },
+  {
+    "id": "deepseek-v4.1-flash-1017",
+    "repository": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+    "revision": "08c8657f02291e11b6f6b63e0e16014f8e748518",
+    "files": [
+      {
+        "path": "chat_template.jinja",
+        "bytes": 16722,
+        "sha256": "95b7033a693b321ceaefb6f89ad07d1e0cf2b095305711f934a4ac649456739d",
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/chat_template.jinja"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 6367257,
+        "sha256": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b",
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/tokenizer.json",
+        "modelType": "BPE",
+        "vocab": 128000,
+        "merges": 127741,
+        "normalizer": {
+          "type": "Sequence",
+          "normalizers": []
+        },
+        "preTokenizer": {
+          "type": "Sequence",
+          "pretokenizers": [
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "\\p{N}{1,3}"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "[一-龥぀-ゟ゠-ヿ]+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "[!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~][A-Za-z]+|[^\r\n\\p{L}\\p{P}\\p{S}]?[\\p{L}\\p{M}]+| ?[\\p{P}\\p{S}]+[\r\n]*|\\s*[\r\n]+|\\s+(?!\\S)|\\s+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "ByteLevel",
+              "add_prefix_space": false,
+              "trim_offsets": true,
+              "use_regex": false
+            }
+          ]
+        },
+        "decoder": {
+          "type": "ByteLevel",
+          "add_prefix_space": true,
+          "trim_offsets": true,
+          "use_regex": true
+        }
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 801,
+        "sha256": "6ac8c8dc065ed118161d02dd532749ae3f52c243deac27872134fae2f50d8547",
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/resolve/08c8657f02291e11b6f6b63e0e16014f8e748518/tokenizer_config.json"
+      }
+    ]
+  },
+  {
+    "id": "qwen3.8-27b",
+    "repository": "Qwen/Qwen3.8-27B",
+    "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+    "files": [
+      {
+        "path": "chat_template.jinja",
+        "bytes": 9004,
+        "sha256": "af16f654968d47d09a6c604e00370b12dbc21f76456f59c9e98b82e84d9f6375",
+        "source": "https://huggingface.co/Qwen/Qwen3.8-27B/resolve/37561816e66b5b9153b1b64c10968c18c1e6f4a0/chat_template.jinja"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 12809320,
+        "sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+        "source": "https://huggingface.co/Qwen/Qwen3.8-27B/resolve/37561816e66b5b9153b1b64c10968c18c1e6f4a0/tokenizer.json",
+        "modelType": "BPE",
+        "vocab": 248044,
+        "merges": 247587,
+        "normalizer": {
+          "type": "NFC"
+        },
+        "preTokenizer": {
+          "type": "Sequence",
+          "pretokenizers": [
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?[\\p{L}\\p{M}]+|\\p{N}| ?[^\\s\\p{L}\\p{M}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "ByteLevel",
+              "add_prefix_space": false,
+              "trim_offsets": false,
+              "use_regex": false
+            }
+          ]
+        },
+        "decoder": {
+          "type": "ByteLevel",
+          "add_prefix_space": false,
+          "trim_offsets": false,
+          "use_regex": false
+        }
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 9984,
+        "sha256": "207c03c41a06a9c3b0cc527d8a56115159c1eac6b59a4ffae85b646e773d074e",
+        "source": "https://huggingface.co/Qwen/Qwen3.8-27B/resolve/37561816e66b5b9153b1b64c10968c18c1e6f4a0/tokenizer_config.json"
+      }
+    ]
+  },
+  {
+    "id": "vjepa-2.1",
+    "files": [],
+    "textTokenizer": "not applicable: vision-only model"
+  },
+  {
+    "id": "cosmos3-nano",
+    "repository": "nvidia/Cosmos3-Nano",
+    "revision": "45666784803b3a7ad577e0def405f9afcc3bddb2",
+    "files": [
+      {
+        "path": "chat_template.json",
+        "bytes": 5499,
+        "sha256": "5c72a170d2a4a1a3bc5adad2e689ae28138a9700e5b8c96c0266331e86c0acce",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/chat_template.json"
+      },
+      {
+        "path": "text_tokenizer/chat_template.jinja",
+        "bytes": 5292,
+        "sha256": "3636d0f0bd6bef02654cdffdc447b79cb2cef8ab02cc75267345946291a489e4",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/text_tokenizer/chat_template.jinja"
+      },
+      {
+        "path": "text_tokenizer/special_tokens_map.json",
+        "bytes": 613,
+        "sha256": "76862e765266b85aa9459767e33cbaf13970f327a0e88d1c65846c2ddd3a1ecd",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/text_tokenizer/special_tokens_map.json"
+      },
+      {
+        "path": "text_tokenizer/tokenizer.json",
+        "bytes": 11422654,
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/text_tokenizer/tokenizer.json",
+        "modelType": "BPE",
+        "vocab": 151643,
+        "merges": 151387,
+        "normalizer": {
+          "type": "NFC"
+        },
+        "preTokenizer": {
+          "type": "Sequence",
+          "pretokenizers": [
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "ByteLevel",
+              "add_prefix_space": false,
+              "trim_offsets": false,
+              "use_regex": false
+            }
+          ]
+        },
+        "decoder": {
+          "type": "ByteLevel",
+          "add_prefix_space": false,
+          "trim_offsets": false,
+          "use_regex": false
+        }
+      },
+      {
+        "path": "text_tokenizer/tokenizer_config.json",
+        "bytes": 5404,
+        "sha256": "355f2b4e5bad7b01f11ef6cb68ebc176f61b95c3276092ea225b1bea0e01e95c",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/text_tokenizer/tokenizer_config.json"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 7032403,
+        "sha256": "a5d85b6dcc535e6b93115a9ef287e6132fdbf30270da6218194ba742261173c7",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/tokenizer.json",
+        "modelType": "BPE",
+        "vocab": 151643,
+        "merges": 151387,
+        "normalizer": {
+          "type": "NFC"
+        },
+        "preTokenizer": {
+          "type": "Sequence",
+          "pretokenizers": [
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "ByteLevel",
+              "add_prefix_space": false,
+              "trim_offsets": false,
+              "use_regex": false
+            }
+          ]
+        },
+        "decoder": {
+          "type": "ByteLevel",
+          "add_prefix_space": false,
+          "trim_offsets": false,
+          "use_regex": false
+        }
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 10868,
+        "sha256": "c2da771801886ad9ae98181793ffd3dfb7f1af30f6f7c6a4e15d7dbba52e2399",
+        "source": "https://huggingface.co/nvidia/Cosmos3-Nano/resolve/45666784803b3a7ad577e0def405f9afcc3bddb2/tokenizer_config.json"
+      }
+    ]
+  },
+  {
+    "id": "groot-n1.7",
+    "repository": "nvidia/Cosmos-Reason2-2B",
+    "revision": "9ce19a195e423419c349abfc86fd07178b230561",
+    "files": [
+      {
+        "path": "chat_template.json",
+        "source": "https://huggingface.co/nvidia/Cosmos-Reason2-2B/resolve/9ce19a195e423419c349abfc86fd07178b230561/chat_template.json",
+        "bytes": 5502,
+        "sha256": "6f8a6a55027e3da5160105556cda5dd69f6423f1c32645f6730d32de7773d0c4",
+        "gitBlob": "e49e75bdda104c8de941eb20e0b3765184fb27bc",
+        "equivalentPublicSource": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/resolve/89644892e4d85e24eaac8bacfd4f463576704203/chat_template.json",
+        "resolution": "public asset is byte-identical to the official dependency git blob"
+      },
+      {
+        "path": "tokenizer.json",
+        "source": "https://huggingface.co/nvidia/Cosmos-Reason2-2B/resolve/9ce19a195e423419c349abfc86fd07178b230561/tokenizer.json",
+        "bytes": 7032403,
+        "sha256": "a5d85b6dcc535e6b93115a9ef287e6132fdbf30270da6218194ba742261173c7",
+        "gitBlob": "c6cc1014128b19d1fc46b1d30a23e3b1d35db421",
+        "equivalentPublicSource": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/resolve/89644892e4d85e24eaac8bacfd4f463576704203/tokenizer.json",
+        "resolution": "public asset is byte-identical to the official dependency git blob"
+      },
+      {
+        "path": "tokenizer_config.json",
+        "source": "https://huggingface.co/nvidia/Cosmos-Reason2-2B/resolve/9ce19a195e423419c349abfc86fd07178b230561/tokenizer_config.json",
+        "bytes": 10868,
+        "sha256": "c2da771801886ad9ae98181793ffd3dfb7f1af30f6f7c6a4e15d7dbba52e2399",
+        "gitBlob": "d3d3763207692c78780f4bf42d4dadf49a5c8012",
+        "equivalentPublicSource": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/resolve/89644892e4d85e24eaac8bacfd4f463576704203/tokenizer_config.json",
+        "resolution": "public asset is byte-identical to the official dependency git blob"
+      }
+    ],
+    "role": "official checkpoint processor backbone dependency"
+  },
+  {
+    "id": "vla-jepa",
+    "repository": "Qwen/Qwen3-VL-2B-Instruct",
+    "revision": "89644892e4d85e24eaac8bacfd4f463576704203",
+    "files": [
+      {
+        "path": "chat_template.json",
+        "bytes": 5502,
+        "sha256": "6f8a6a55027e3da5160105556cda5dd69f6423f1c32645f6730d32de7773d0c4",
+        "source": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/resolve/89644892e4d85e24eaac8bacfd4f463576704203/chat_template.json"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 7032403,
+        "sha256": "a5d85b6dcc535e6b93115a9ef287e6132fdbf30270da6218194ba742261173c7",
+        "source": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/resolve/89644892e4d85e24eaac8bacfd4f463576704203/tokenizer.json",
+        "modelType": "BPE",
+        "vocab": 151643,
+        "merges": 151387,
+        "normalizer": {
+          "type": "NFC"
+        },
+        "preTokenizer": {
+          "type": "Sequence",
+          "pretokenizers": [
+            {
+              "type": "Split",
+              "pattern": {
+                "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+              },
+              "behavior": "Isolated",
+              "invert": false
+            },
+            {
+              "type": "ByteLevel",
+              "add_prefix_space": false,
+              "trim_offsets": false,
+              "use_regex": false
+            }
+          ]
+        },
+        "decoder": {
+          "type": "ByteLevel",
+          "add_prefix_space": false,
+          "trim_offsets": false,
+          "use_regex": false
+        }
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 10868,
+        "sha256": "c2da771801886ad9ae98181793ffd3dfb7f1af30f6f7c6a4e15d7dbba52e2399",
+        "source": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/resolve/89644892e4d85e24eaac8bacfd4f463576704203/tokenizer_config.json"
+      }
+    ],
+    "role": "official checkpoint processor backbone dependency"
+  }
+]

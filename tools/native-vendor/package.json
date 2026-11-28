@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@huggingface/tokenizers": "0.2.0",
+    "@huggingface/jinja": "0.5.13",
+    "esbuild": "0.28.2",
+    "graphql": "17.0.2"
+  }
+}

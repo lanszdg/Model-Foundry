@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111c20"><title>MODEL FOUNDRY · 大模型工程现场</title><style>/* STYLES */
+<html lang="zh-CN"><head><meta charset="UTF-8"><script>if(new URLSearchParams(location.search).get('foundry-native-frame')==='mlflow'){globalThis.__FOUNDRY_NATIVE_FRAME__=true;document.documentElement.style.visibility='hidden';const receiveNative=event=>{if(event.source===parent&&event.data?.kind==='foundry-native-bootstrap'){removeEventListener('message',receiveNative);document.open();document.write(event.data.html);document.close();document.documentElement.style.visibility='visible';}};addEventListener('message',receiveNative);}</script><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111c20"><title>MODEL FOUNDRY · 大模型工程现场</title><style>/* STYLES */
 /* WORKSPACE_STYLES */</style></head>
 <body>
 <canvas id="world" aria-label="第一人称机房，使用 WASD 移动，拖动鼠标观察"></canvas><div id="worldFallback" hidden><h2>图形设备未就绪</h2><p>仍可从工程工位操作全部系统。</p></div><div class="scene-vignette"></div><div id="worldLabels"></div>
@@ -17,9 +17,9 @@ labctl install storage
 systemctl start storage
 mount storage-01:/data /data</pre><h3>故障恢复</h3><p>训练中断后，先修复节点、网络或存储，再从完整检查点恢复。显存不足要修改训练配方；过高学习率可能导致训练发散。</p></div></div><div class="manual-note">当前版本支持逐节点认证与注册、GPU 分配、分片检查点与恢复，以及 70B Dense 的预训练、SFT、DPO 与服务交付。工程配置、日志、指标、文件和产物共享同一份世界状态。</div></div></section>
 <div id="toast" role="status"></div><div id="confirmModal" class="confirm-modal" hidden><div><h3>重新开始工程？</h3><p>当前本地进度将被替换。建议先导出工程存档。</p><button id="cancelReset" class="btn">保留当前工程</button><button id="confirmReset" class="btn danger">重新开始</button></div></div><input id="importFile" type="file" accept="application/json,.json" hidden><input id="corpusFile" type="file" accept=".jsonl,.json,.txt" hidden>
-<script>/* ENGINE */</script><script>/* SYSTEMS */</script><script>/* RUNTIME */</script><script>/* PYTHON */</script><script>/* CORPUS */</script><script>/* MODEL_SPEC */</script><script>/* TRANSFORMER */</script><script>/* NATIVE_DECODER */</script><script>/* LEARNING */</script><script>/* ACCUMULATION */</script><script>/* RANK_NUMERICS */</script><script>/* MODEL_CATALOG */</script><script>/* MODEL_TOPOLOGY */</script><script>/* WEIGHT_INVENTORY */</script><script>/* PROJECT_RESOURCES */</script><script>/* MODEL_LAB */</script><script>/* DEBUGGER */</script>
+<script>/* ENGINE */</script><script>/* SYSTEMS */</script><script>/* RUNTIME */</script><script>/* PYTHON */</script><script>/* CORPUS */</script><script>/* MODEL_SPEC */</script><script>/* TRANSFORMER */</script><script>/* NATIVE_DECODER */</script><script>/* LEARNING */</script><script>/* ACCUMULATION */</script><script>/* RANK_NUMERICS */</script><script>/* NATIVE_HF */</script><script>/* NATIVE_TOKENIZER_ASSETS */</script><script>/* NATIVE_TOKENIZER */</script><script>/* MODEL_CATALOG */</script><script>/* MODEL_TOPOLOGY */</script><script>/* WEIGHT_INVENTORY */</script><script>/* PROJECT_RESOURCES */</script><script>/* MODEL_LAB */</script><script>/* DEBUGGER */</script>
 <script>/* DECODER */</script><script>/* TRANSFORMER_DECODER */</script>
-<script>/* SERVING */</script><script>/* ARTIFACTS */</script><script>/* DISTRIBUTED */</script><script>/* TRANSFORMER_TOOLS */</script><script>/* TERMINAL */</script><script>/* MODEL_CONTRACT */</script><script>/* ACCEPTANCE */</script><script>/* ADAPTATION */</script><script>/* PROJECT_CONTRACT */</script><script>/* DOMAIN_KERNELS */</script><script>/* MODEL_PROTOCOL */</script><script>/* ENGINEERING */</script><script>/* TRACKING_API */</script><script>/* SERVICE_PROTOCOL */</script><script>/* SHARDED_TRAINING */</script><script>/* NETWORK_TIMELINE */</script><script>/* PROJECT_TRAINING */</script>
+<script>/* SERVING */</script><script>/* ARTIFACTS */</script><script>/* DISTRIBUTED */</script><script>/* TRANSFORMER_TOOLS */</script><script>/* TERMINAL */</script><script>/* MODEL_CONTRACT */</script><script>/* ACCEPTANCE */</script><script>/* ADAPTATION */</script><script>/* PROJECT_CONTRACT */</script><script>/* DOMAIN_KERNELS */</script><script>/* MODEL_PROTOCOL */</script><script>/* NATIVE_PROJECT */</script><script>/* ENGINEERING */</script><script>/* TRACKING_API */</script><script>/* TRACKING_NATIVE_API */</script><script>/* GRAPHQL_VENDOR */</script><script>/* MLFLOW_SCHEMA */</script><script>/* NATIVE_GRAPHQL */</script><script>/* MLFLOW_UI_ASSETS */</script><script>/* SERVICE_PROTOCOL */</script><script>/* SHARDED_TRAINING */</script><script>/* NETWORK_TIMELINE */</script><script>/* PROJECT_TRAINING */</script>
 <script type="text/plain" id="trainingWorkerSource">/* TRAINING_WORKER */</script>
 <script>/* SCENE */</script><script>/* STORAGE */</script><script>(async()=>{await FoundryStorage.open(); await FoundryCore.WeightInventory.ready;
 /* APP */
@@ -30,4 +30,6 @@ mount storage-01:/data /data</pre><h3>故障恢复</h3><p>训练中断后，先�
 /* MODEL_LAB_UI */
 /* STUDIO */
 /* ENGINEERING_UI */
+/* NATIVE_MLFLOW_UI */
+/* NATIVE_TOKENIZER_UI */
 })();</script></body></html>

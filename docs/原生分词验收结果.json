@@ -1,0 +1,35 @@
+{
+  "version": "0.16.0",
+  "checks": 730,
+  "routes": [
+    {
+      "model": "glm-5.3",
+      "projectionRows": 334,
+      "fullVocabulary": 154856
+    },
+    {
+      "model": "deepseek-v4.1-flash-1017",
+      "projectionRows": 1576,
+      "fullVocabulary": 129280
+    },
+    {
+      "model": "qwen3.8-27b",
+      "projectionRows": 300,
+      "fullVocabulary": 248077
+    },
+    {
+      "model": "cosmos3-nano",
+      "projectionRows": 290
+    },
+    {
+      "model": "groot-n1.7",
+      "projectionRows": 290
+    },
+    {
+      "model": "vla-jepa",
+      "projectionRows": 290
+    }
+  ],
+  "goldenReference": "Rust tokenizers + Transformers Python Jinja",
+  "nativeFrontend": "MLflow 3.0.1"
+}
